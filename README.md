@@ -68,18 +68,17 @@ The source code is organized into a modular structure for clarity and maintainab
 
 ```
 Ass1
-.
 ├── include/                  # Header files (.h) - Declarations only
 │   ├── matrix_operations.h
 │   ├── naive_mat_multiply_algo.h
 │   └── strassen_mat_multiply_algo.h
-├── src/                      # Source files (.cpp) - Function implementations
+├── source/                      # Source files (.cpp) - Function implementations
 │   ├── matrix_operations.cpp
 │   ├── naive_mat_multiply_algo.cpp
 │   └── strassen_mat_multiply_algo.cpp
 ├── main.cpp                  # Main entry point, orchestration, and timing
 ├── Makefile                  # Build automation script
-└── README.md                 # This file
+README.md                 # This file
 ```
 
 ---
