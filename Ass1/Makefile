@@ -1,25 +1,23 @@
-CPP = g++
+CXX = g++
 
-TARGET = Naive
-SRC = Naive.cpp
-OBJ = Naive.o
-OPENMPFLAG = -fopenmp
+CXXFLAGS = -std=c++17 -O3 -Wall -Iinclude -fopenmp
 
-$(OBJ): $(SRC)
-	$(CPP) $(OPENMPFLAG) -c $(SRC) -o $(OBJ)
+SRC_DIR = source
 
-$(TARGET): $(OBJ)
-	$(CPP) $(OPENMPFLAG) -o $(TARGET) $(OBJ) 
-	
-# $(TARGET): $(SRC)
-# 	$(CPP) -o $(TARGET) $(SRC)
+TARGET = main
 
-build: $(TARGET)
+SOURCES = $(wildcard $(SRC_DIR)/*.cpp) main.cpp
 
-clean: 
-	rm -rf A.txt B.txt res.txt $(OBJ) $(TARGET)
+OBJECTS = $(SOURCES:.cpp=.o)
 
-run:
-	./$(TARGET)
+all: $(TARGET)
 
-.PHONY: all clean run
+$(TARGET): $(OBJECTS)
+	$(CXX) $(CXXFLAGS) -o $(TARGET) $(OBJECTS)
+
+
+%.o: %.cpp
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+clean:
+	rm -f $(TARGET) $(OBJECTS)
