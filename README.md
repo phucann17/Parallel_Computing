@@ -59,7 +59,7 @@ The application takes only one command.
 
 **Syntax:**
 ```bash
-./main
+mpirun -np 4 ./main
 ```
 
 ## 3. Project Structure
