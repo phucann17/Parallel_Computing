@@ -21,7 +21,7 @@ Before you begin, ensure your system has the following tools installed.
 On **Debian/Ubuntu-based** systems, you can install all dependencies with this command:
 ```bash
 sudo apt-get update
-sudo apt-get install build-essential make openmpi-bin libopenmpi-dev
+sudo apt-get install build-essential make openmpi-bin libopenmpi-dev 
 ```
 For other operating systems, figure it out yourself. Google exists for a reason.
 
