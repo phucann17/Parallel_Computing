@@ -6,3 +6,5 @@ void sequential_matrix_multiplication_strassen(const matrix& A, const matrix& B,
 
 // You can define the parallel version here. 
 //  DEFINE //
+void openmp_parallel_matrix_multiplication_strassen_operation(const matrix& A, const matrix& B, matrix& res, unsigned int n);
+void openmp_parallel_matrix_multiplication_strassen(const matrix& A, const matrix& B, matrix& res, unsigned int n);
