@@ -21,3 +21,8 @@ $(TARGET): $(OBJECTS)
 
 clean:
 	rm -f $(TARGET) $(OBJECTS)
+
+run:
+	./${TARGET}
+
+.PHONY: run clean all

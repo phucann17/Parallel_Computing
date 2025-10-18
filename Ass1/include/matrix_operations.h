@@ -1,6 +1,6 @@
 #pragma once 
 #include <vector>
-
+#include <omp.h>
 typedef std::vector<std::vector<int>> matrix;
 
 matrix create_matrix(int n);
