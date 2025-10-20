@@ -68,7 +68,7 @@ matrix transpose(const matrix& B) {
 matrix transpose_parallel(const matrix& B) {
     unsigned int n = B.size();
     matrix BT = create_matrix(n);
-    #pragma omp parallel for collapse(2) schedule(static) num_threads(8)
+    // #pragma omp parallel for collapse(2) schedule(static) num_threads(8)
     for (unsigned int i = 0; i < n; ++i)
         for (unsigned int j = 0; j < n; ++j)
             BT[j][i] = B[i][j];
