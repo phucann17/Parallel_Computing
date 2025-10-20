@@ -162,81 +162,81 @@ void openmp_parallel_matrix_multiplication_strassen_operation(const matrix& A, c
     // C21 = M2 + M4
 
     // --- Parallel region for M1..M7 ---
-    if (n >= 256) { 
+    if (n >= 512) { 
         #pragma omp task shared(M1)
         {
             matrix tmp1 = create_matrix(halfSize);
             matrix tmp2 = create_matrix(halfSize);
-            sequential_matrix_addition(A11, A22, tmp1, halfSize);
-            sequential_matrix_addition(B11, B22, tmp2, halfSize);
+            parallel_matrix_addition(A11, A22, tmp1, halfSize);
+            parallel_matrix_addition(B11, B22, tmp2, halfSize);
             openmp_parallel_matrix_multiplication_strassen_operation(tmp1, tmp2, M1, halfSize);
         }
         #pragma omp task shared(M2)
         {
             matrix tmp1 = create_matrix(halfSize);
-            sequential_matrix_addition(A21, A22, tmp1, halfSize);
+            parallel_matrix_addition(A21, A22, tmp1, halfSize);
             openmp_parallel_matrix_multiplication_strassen_operation(tmp1, B11, M2, halfSize);
         }
         #pragma omp task shared(M3)
         {
             matrix tmp1 = create_matrix(halfSize);
-            sequential_matrix_subtraction(B12, B22, tmp1, halfSize);
+            parallel_matrix_subtraction(B12, B22, tmp1, halfSize);
             openmp_parallel_matrix_multiplication_strassen_operation(A11, tmp1, M3, halfSize);
         }
         #pragma omp task shared(M4)
         {
             matrix tmp1 = create_matrix(halfSize);
-            sequential_matrix_subtraction(B21, B11, tmp1, halfSize);
+            parallel_matrix_subtraction(B21, B11, tmp1, halfSize);
             openmp_parallel_matrix_multiplication_strassen_operation(A22, tmp1, M4, halfSize);
         }
         #pragma omp task shared(M5)
         {
             matrix tmp1 = create_matrix(halfSize);
-            sequential_matrix_addition(A11, A12, tmp1, halfSize);
+            parallel_matrix_addition(A11, A12, tmp1, halfSize);
             openmp_parallel_matrix_multiplication_strassen_operation(tmp1, B22, M5, halfSize);
         }
         #pragma omp task shared(M6)
         {
             matrix tmp1 = create_matrix(halfSize);
             matrix tmp2 = create_matrix(halfSize);
-            sequential_matrix_subtraction(A21, A11, tmp1, halfSize);
-            sequential_matrix_addition(B11, B12, tmp2, halfSize);
+            parallel_matrix_subtraction(A21, A11, tmp1, halfSize);
+            parallel_matrix_addition(B11, B12, tmp2, halfSize);
             openmp_parallel_matrix_multiplication_strassen_operation(tmp1, tmp2, M6, halfSize);
         }
         #pragma omp task shared(M7)
         {
             matrix tmp1 = create_matrix(halfSize);
             matrix tmp2 = create_matrix(halfSize);
-            sequential_matrix_subtraction(A12, A22, tmp1, halfSize);
-            sequential_matrix_addition(B21, B22, tmp2, halfSize);
+            parallel_matrix_subtraction(A12, A22, tmp1, halfSize);
+            parallel_matrix_addition(B21, B22, tmp2, halfSize);
             openmp_parallel_matrix_multiplication_strassen_operation(tmp1, tmp2, M7, halfSize);
         }
         #pragma omp taskwait
     } else {
         matrix tmp1 = create_matrix(halfSize);
         matrix tmp2 = create_matrix(halfSize);
-        sequential_matrix_addition(A11, A22, tmp1, halfSize);
-        sequential_matrix_addition(B11, B22, tmp2, halfSize);
+        parallel_matrix_addition(A11, A22, tmp1, halfSize);
+        parallel_matrix_addition(B11, B22, tmp2, halfSize);
         openmp_parallel_matrix_multiplication_strassen_operation(tmp1, tmp2, M1, halfSize);
 
-        sequential_matrix_addition(A21, A22, tmp1, halfSize);
+        parallel_matrix_addition(A21, A22, tmp1, halfSize);
         openmp_parallel_matrix_multiplication_strassen_operation(tmp1, B11, M2, halfSize);
 
-        sequential_matrix_subtraction(B12, B22, tmp1, halfSize);
+        parallel_matrix_subtraction(B12, B22, tmp1, halfSize);
         openmp_parallel_matrix_multiplication_strassen_operation(A11, tmp1, M3, halfSize);
 
-        sequential_matrix_subtraction(B21, B11, tmp1, halfSize);
+        parallel_matrix_subtraction(B21, B11, tmp1, halfSize);
         openmp_parallel_matrix_multiplication_strassen_operation(A22, tmp1, M4, halfSize);
 
-        sequential_matrix_addition(A11, A12, tmp1, halfSize);
+        parallel_matrix_addition(A11, A12, tmp1, halfSize);
         openmp_parallel_matrix_multiplication_strassen_operation(tmp1, B22, M5, halfSize);
 
-        sequential_matrix_subtraction(A21, A11, tmp1, halfSize);
-        sequential_matrix_addition(B11, B12, tmp2, halfSize);
+        parallel_matrix_subtraction(A21, A11, tmp1, halfSize);
+        parallel_matrix_addition(B11, B12, tmp2, halfSize);
         openmp_parallel_matrix_multiplication_strassen_operation(tmp1, tmp2, M6, halfSize);
 
-        sequential_matrix_subtraction(A12, A22, tmp1, halfSize);
-        sequential_matrix_addition(B21, B22, tmp2, halfSize);
+        parallel_matrix_subtraction(A12, A22, tmp1, halfSize);
+        parallel_matrix_addition(B21, B22, tmp2, halfSize);
         openmp_parallel_matrix_multiplication_strassen_operation(tmp1, tmp2, M7, halfSize);
     }
                 
