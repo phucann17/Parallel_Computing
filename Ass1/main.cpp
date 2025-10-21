@@ -30,12 +30,12 @@ int main(){
             }
         }
 
-        // double start = omp_get_wtime();
-        // sequential_matrix_multiplication_naive(A, B, res_naive_sequential, n[s]);
-        // double end = omp_get_wtime();
+        double start = omp_get_wtime();
+        sequential_matrix_multiplication_strassen(A, B, res_strassen_sequential, n[s]);
+        double end = omp_get_wtime();
 
-        // printf("Time of sequential naive matrix multiplication algorithm = %.6f s\n", end - start);
-
+        printf("Time of sequential strassen matrix multiplication algorithm = %.6f s\n", end - start);
+        write_log("A.txt", res_strassen_sequential, n[s]);
 
         // double start_3 = omp_get_wtime();
         // // cout << "hello !!!!" << endl;
@@ -60,11 +60,14 @@ int main(){
         // printf("Time of transpose parallel naive matrix multiplication algorithm = %.6f s\n", end_1 - start_1);
         //###############################################################################################
         double start_1 = omp_get_wtime();
-        openmp_parallel_matrix_multiplication_strassen(A, B, res_naive_parallel, n[s]);
+        sequential_matrix_multiplication_naive(A, B, res_naive_sequential, n[s]);
         double end_1 = omp_get_wtime();
-        printf("Time of parallel naive matrix multiplication algorithm = %.6f s\n", end_1 - start_1);
-        // sequential_matrix_subtraction(res_strassen_sequential, res_naive_parallel, res_naive_sequential, n[s]);
-        // write_log("A.txt", res_naive_sequential, n[s]);
+        printf("Time of sequential naive matrix multiplication algorithm = %.6f s\n", end_1 - start_1);
+        // sequential_matrix_subtraction(res_naive_sequential, res_naive_parallel, res_strassen_sequential, n[s]);
+        write_log("B.txt", res_naive_sequential, n[s]);
+
+        sequential_matrix_subtraction(res_naive_sequential, res_strassen_sequential, res_naive_parallel, n[s]);
+        write_log("C.txt", res_naive_parallel, n[s]);
         
         //###############################################################################################
     }
