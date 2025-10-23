@@ -8,6 +8,9 @@
 // But don't worry, when you read these comments, I have already handled this case :))) 
 // So below is the perfect implementation of sequential Strassen's algorithm :))))
 
+// Note: The way to pad the matrix to the next power of 2 is so inefficient because it takes O(n^2) space complexity
+// So for more efficient method, I decide to pad the original matrices to the next nearest even number only if n is odd 
+
 bool check_power_of_two(unsigned int n) {
     return (n & (n - 1)) == 0;
 }
@@ -39,8 +42,8 @@ void sequential_matrix_multiplication_strassen(const matrix& A, const matrix& B,
         return;
     }
 
-    if (!check_power_of_two(n)) {
-        unsigned int padded_n = next_power_of_two(n);
+    if ((n & 1)) {
+        unsigned int padded_n = n + 1;
         matrix padded_A = create_matrix(padded_n);
         matrix padded_B = create_matrix(padded_n);
         matrix padded_res = create_matrix(padded_n);

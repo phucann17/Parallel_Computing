@@ -14,7 +14,7 @@ using namespace std;
 // }
 
 int main(){
-    int n[1] = {2000};
+    int n[1] = {10000};
     for (int s = 0; s < 1; ++s) {
         cout << "Implementation with matrix size: " << n[s] << endl;
         matrix A = create_matrix(n[s]);
