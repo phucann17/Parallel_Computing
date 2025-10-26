@@ -2,9 +2,70 @@
 #include "matrix_operations.h"
 #include "naive_mat_multiply_algo.h"
 
+// Note: Strassen's algorithm is designed for square matrices of size n x n where n is a power of 2.
+// So when dealing with matrices with its size not a power of 2, we need to pad the matrices to the next power of 2. 
+// Sorry so much because I did not remember this knowledge when implementing the algorithm before :((( 
+// But don't worry, when you read these comments, I have already handled this case :))) 
+// So below is the perfect implementation of sequential Strassen's algorithm :))))
+
+// Note: The way to pad the matrix to the next power of 2 is so inefficient because it takes O(n^2) space complexity
+// So for more efficient method, I decide to pad the original matrices to the next nearest even number only if n is odd 
+
+bool check_power_of_two(unsigned int n) {
+    return (n & (n - 1)) == 0;
+}
+
+unsigned int next_power_of_two(unsigned int n) {
+    // 5 -> 00000101
+    // 5-- -> 4 = 00000100
+    // 4 | 4 >> 1 -> 00000100 | 00000010 = 00000110 = 6
+    // 6 | 6 >> 2 -> 00000110 | 00000001 = 00000111 = 7
+    // 7 | 7 >> 4 -> 00000111 | 00000000 = 00000111 = 7
+    // 7 | 7 >> 8 -> 00000111 | 00000000 = 00000111 = 7
+    // 7 | 7 >> 16 -> 00000111 | 00000000 = 00000111 = 7
+    // 7++ = 8 -> 00001000
+
+    // Note: This function works only for 32-bit unsigned integers, with 64-bit integers, we need to extend the shifts to 32.
+    n--;
+    n |= n >> 1;
+    n |= n >> 2;
+    n |= n >> 4;
+    n |= n >> 8;
+    n |= n >> 16;
+    n++;
+    return n;
+}
+
 void sequential_matrix_multiplication_strassen(const matrix& A, const matrix& B, matrix& res, unsigned int n) {
     if (n <= 16) {
         sequential_matrix_multiplication_naive(A, B, res, n);
+        return;
+    }
+
+    if ((n & 1)) {
+        unsigned int padded_n = n + 1;
+        matrix padded_A = create_matrix(padded_n);
+        matrix padded_B = create_matrix(padded_n);
+        matrix padded_res = create_matrix(padded_n);
+
+        // Copy original matrices into padded matrices
+        for (unsigned int i = 0; i < n; ++i) {
+            for (unsigned int j = 0; j < n; ++j) {
+                padded_A[i][j] = A[i][j];
+                padded_B[i][j] = B[i][j];
+            }
+        }
+
+        // Perform Strassen's algorithm on padded matrices
+        sequential_matrix_multiplication_strassen(padded_A, padded_B, padded_res, padded_n);
+
+        // Copy result back to original result matrix
+        for (unsigned int i = 0; i < n; ++i) {
+            for (unsigned int j = 0; j < n; ++j) {
+                res[i][j] = padded_res[i][j];
+            }
+        }
+        
         return;
     }
 
@@ -114,9 +175,36 @@ void sequential_matrix_multiplication_strassen(const matrix& A, const matrix& B,
 }
 
 void openmp_parallel_matrix_multiplication_strassen_operation(const matrix& A, const matrix& B, matrix& res, unsigned int n) {
-    if (n <= 16) {
+    if (n <= 5096) {
         // openMP_parallel_matrix_multiplication_naive(A, B, res, n);
         openMP_transpose_parallel_matrix_multiplication_naive(A, B, res, n);
+        return;
+    }
+
+    if ((n & 1)) {
+        unsigned int padded_n = n + 1;
+        matrix padded_A = create_matrix(padded_n);
+        matrix padded_B = create_matrix(padded_n);
+        matrix padded_res = create_matrix(padded_n);
+
+        // Copy original matrices into padded matrices
+        for (unsigned int i = 0; i < n; ++i) {
+            for (unsigned int j = 0; j < n; ++j) {
+                padded_A[i][j] = A[i][j];
+                padded_B[i][j] = B[i][j];
+            }
+        }
+
+        // Perform Strassen's algorithm on padded matrices
+        openmp_parallel_matrix_multiplication_strassen_operation(padded_A, padded_B, padded_res, padded_n);
+
+        // Copy result back to original result matrix
+        for (unsigned int i = 0; i < n; ++i) {
+            for (unsigned int j = 0; j < n; ++j) {
+                res[i][j] = padded_res[i][j];
+            }
+        }
+        
         return;
     }
 
@@ -162,7 +250,7 @@ void openmp_parallel_matrix_multiplication_strassen_operation(const matrix& A, c
     // C21 = M2 + M4
 
     // --- Parallel region for M1..M7 ---
-    if (n >= 512) { 
+    if (n >= 6000) { 
         #pragma omp task shared(M1)
         {
             matrix tmp1 = create_matrix(halfSize);
@@ -264,32 +352,29 @@ void openmp_parallel_matrix_multiplication_strassen_operation(const matrix& A, c
     //     sequential_matrix_addition(tmp1, M3, tmp2, halfSize);
     //     sequential_matrix_addition(tmp2, M6, C22, halfSize);
     // }
-    matrix C11 = create_matrix(halfSize);
-    matrix C12 = create_matrix(halfSize);
-    matrix C21 = create_matrix(halfSize);
-    matrix C22 = create_matrix(halfSize);
-    // #pragma omp taskwait
-    #pragma omp parallel for collapse(2) schedule(static) num_threads(8)
-    for (int i = 0; i < halfSize; i++)
-        for (int j = 0; j < halfSize; j++) {
-            C11[i][j] = M1[i][j] + M4[i][j] - M5[i][j] + M7[i][j];
-            C12[i][j] = M3[i][j] + M5[i][j];
-            C21[i][j] = M2[i][j] + M4[i][j];
-            C22[i][j] = M1[i][j] - M2[i][j] + M3[i][j] + M6[i][j];
-        }
+    // matrix C11 = create_matrix(halfSize);
+    // matrix C12 = create_matrix(halfSize);
+    // matrix C21 = create_matrix(halfSize);
+    // matrix C22 = create_matrix(halfSize);
+    // // #pragma omp taskwait
+    // #pragma omp parallel for collapse(2) schedule(static) num_threads(8)
+    // for (int i = 0; i < halfSize; i++)
+    //     for (int j = 0; j < halfSize; j++) {
+    //         C11[i][j] = M1[i][j] + M4[i][j] - M5[i][j] + M7[i][j];
+    //         C12[i][j] = M3[i][j] + M5[i][j];
+    //         C21[i][j] = M2[i][j] + M4[i][j];
+    //         C22[i][j] = M1[i][j] - M2[i][j] + M3[i][j] + M6[i][j];
+    //     }
     // cout << "Where is bug ?? " << endl;
     #pragma omp parallel for collapse(2) schedule(static) num_threads(8)
-    for (int i = 0; i < halfSize; ++i){
-        for (int j = 0; j < halfSize; ++j) {
-            res[i][j] = C11[i][j];
-
-            res[i][j + halfSize] = C12[i][j];
-
-            res[i + halfSize][j] = C21[i][j];
-
-            res[i + halfSize][j + halfSize] = C22[i][j];
+    for (int i = 0; i < halfSize; ++i) {
+            for (int j = 0; j < halfSize; ++j) {
+                res[i][j] = M1[i][j] + M4[i][j] - M5[i][j] + M7[i][j];          // C11
+                res[i][j + halfSize] = M3[i][j] + M5[i][j];                     // C12
+                res[i + halfSize][j] = M2[i][j] + M4[i][j];                     // C21
+                res[i + halfSize][j + halfSize] = M1[i][j] - M2[i][j] + M3[i][j] + M6[i][j]; // C22
+            }
         }
-    }
     
     
 }
