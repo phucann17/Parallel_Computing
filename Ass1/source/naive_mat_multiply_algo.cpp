@@ -12,6 +12,8 @@ void sequential_matrix_multiplication_naive(const matrix& A, const matrix& B, ma
         } 
     }
 }
+
+
 //#################################################################################################################
 // Transpose
 /*
@@ -75,11 +77,26 @@ matrix transpose_parallel(const matrix& B) {
 
     return BT;
 }
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// void sequential_transpose_matrix_multiplication_naive(const matrix& A, const matrix& B, matrix& res, unsigned int n){
+//     matrix BT = transpose_parallel(B);
 
+//     //#pragma omp parallel for collapse(2) schedule(static) num_threads(10)
+//     for (unsigned int i = 0; i < n; ++i) {
+//         for (unsigned int j = 0; j < n; ++j) {
+//             int tmp = 0;
+//             for (unsigned int k = 0; k < n; ++k)
+//                 tmp += A[i][k] * BT[j][k];
+//             res[i][j] = tmp;
+//         }
+//     }
+// }
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void openMP_transpose_parallel_matrix_multiplication_naive(const matrix& A, const matrix& B, matrix& res, unsigned int n){
     matrix BT = transpose_parallel(B);
 
-    #pragma omp parallel for collapse(2) schedule(static) num_threads(14)
+    #pragma omp parallel for collapse(2) schedule(static) num_threads(10)
     for (unsigned int i = 0; i < n; ++i) {
         for (unsigned int j = 0; j < n; ++j) {
             int tmp = 0;
@@ -89,7 +106,7 @@ void openMP_transpose_parallel_matrix_multiplication_naive(const matrix& A, cons
         }
     }
 }
-
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void openMP_parallel_matrix_multiplication_naive(const matrix& A, const matrix& B, matrix& res, unsigned int n) {
     #pragma omp parallel for collapse(2) schedule(static) num_threads(8)
     for (unsigned int i = 0; i < n; ++i) {
@@ -102,4 +119,50 @@ void openMP_parallel_matrix_multiplication_naive(const matrix& A, const matrix& 
         } 
     }
 }
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+std::vector<int> flatten_matrix(const matrix& M) {
+    unsigned int n = M.size();
+    std::vector<int> flat(n*n);
+    for (unsigned int i = 0; i < n; ++i)
+        for (unsigned int j = 0; j < n; ++j)
+            flat[i*n + j] = M[i][j];
+    return flat;
+}
 
+void openMP_gpu_matrix_multiply(const matrix& A, const matrix& B, matrix& res) {
+    unsigned int n = A.size();
+    matrix BT = transpose(B);
+
+    int* A_flat = new int[n*n];
+    int* BT_flat = new int[n*n];
+    int* res_flat = new int[n*n];
+
+    #pragma omp parallel for collapse(2) schedule(static) num_threads(10)
+    for (unsigned int i = 0; i < n; ++i)
+        for (unsigned int j = 0; j < n; ++j) {
+            A_flat[i*n+j] = A[i][j];
+            BT_flat[i*n+j] = BT[j][i]; // transpose
+            res_flat[i*n+j] = 0;
+        }
+
+    #pragma omp target teams distribute parallel for collapse(2) \
+        map(to: A_flat[0:n*n], BT_flat[0:n*n]) \
+        map(from: res_flat[0:n*n])
+    for (unsigned int i = 0; i < n; ++i)
+        for (unsigned int j = 0; j < n; ++j) {
+            int tmp = 0;
+            for (unsigned int k = 0; k < n; ++k)
+                tmp += A_flat[i*n+k] * BT_flat[j*n+k];
+            res_flat[i*n+j] = tmp;
+        }
+
+
+    #pragma omp parallel for collapse(2) schedule(static) num_threads(10)
+    for (unsigned int i = 0; i < n; ++i)
+        for (unsigned int j = 0; j < n; ++j)
+            res[i][j] = res_flat[i*n+j];
+
+    delete[] A_flat;
+    delete[] BT_flat;
+    delete[] res_flat;
+}

@@ -175,7 +175,7 @@ void sequential_matrix_multiplication_strassen(const matrix& A, const matrix& B,
 }
 
 void openmp_parallel_matrix_multiplication_strassen_operation(const matrix& A, const matrix& B, matrix& res, unsigned int n) {
-    if (n <= 5096) {
+    if (n <= 1024) {
         // openMP_parallel_matrix_multiplication_naive(A, B, res, n);
         openMP_transpose_parallel_matrix_multiplication_naive(A, B, res, n);
         return;
@@ -366,7 +366,7 @@ void openmp_parallel_matrix_multiplication_strassen_operation(const matrix& A, c
     //         C22[i][j] = M1[i][j] - M2[i][j] + M3[i][j] + M6[i][j];
     //     }
     // cout << "Where is bug ?? " << endl;
-    #pragma omp parallel for collapse(2) schedule(static) num_threads(8)
+    #pragma omp parallel for collapse(2) schedule(static) num_threads(10)
     for (int i = 0; i < halfSize; ++i) {
             for (int j = 0; j < halfSize; ++j) {
                 res[i][j] = M1[i][j] + M4[i][j] - M5[i][j] + M7[i][j];          // C11
