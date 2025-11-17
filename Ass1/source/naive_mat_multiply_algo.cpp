@@ -68,7 +68,7 @@ matrix transpose(const matrix& B) {
 matrix transpose_parallel(const matrix& B) {
     unsigned int n = B.size();
     matrix BT = create_matrix(n);
-    #pragma omp parallel for collapse(2) schedule(static) num_threads(10)
+    #pragma omp parallel for collapse(2) schedule(static) num_threads(18)
     for (unsigned int i = 0; i < n; ++i)
         for (unsigned int j = 0; j < n; ++j)
             BT[j][i] = B[i][j];
@@ -79,7 +79,7 @@ matrix transpose_parallel(const matrix& B) {
 void openMP_transpose_parallel_matrix_multiplication_naive(const matrix& A, const matrix& B, matrix& res, unsigned int n){
     matrix BT = transpose_parallel(B);
 
-    #pragma omp parallel for collapse(2) schedule(static) num_threads(14)
+    #pragma omp parallel for collapse(2) schedule(static) num_threads(18)
     for (unsigned int i = 0; i < n; ++i) {
         for (unsigned int j = 0; j < n; ++j) {
             int tmp = 0;

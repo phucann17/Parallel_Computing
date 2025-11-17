@@ -1,7 +1,7 @@
 #include "matrix_operations.h"
 #include <cstdio>
 #include <cstdlib>
-
+unsigned int n_global = 0;
 matrix create_matrix(int n) {
     return matrix(n, std::vector<int> (n, 0));
 }
@@ -15,7 +15,6 @@ void sequential_matrix_addition(const matrix& a, const matrix& b, matrix& res, i
 }
 
 void sequential_matrix_subtraction(const matrix& a, const matrix& b, matrix& res, int n) {
-    #pragma omp parallel for collapse(2) schedule(static) num_threads(8)
     for (int i = 0; i < n; ++i) {
         for (int j = 0; j < n; ++j) {
             res[i][j] = a[i][j] - b[i][j];
@@ -24,7 +23,7 @@ void sequential_matrix_subtraction(const matrix& a, const matrix& b, matrix& res
 }
 
 void parallel_matrix_addition(const matrix& a, const matrix& b, matrix& res, int n) {
-    #pragma omp parallel for collapse(2) schedule(static) num_threads(8)
+    #pragma omp parallel for collapse(2) schedule(static) num_threads(6)
     for (int i = 0; i < n; ++i) {
         for (int j = 0; j < n; ++j) {
             res[i][j] = a[i][j] + b[i][j];
@@ -33,6 +32,7 @@ void parallel_matrix_addition(const matrix& a, const matrix& b, matrix& res, int
 }
 
 void parallel_matrix_subtraction(const matrix& a, const matrix& b, matrix& res, int n) {
+    #pragma omp parallel for collapse(2) schedule(static) num_threads(6)
     for (int i = 0; i < n; ++i) {
         for (int j = 0; j < n; ++j) {
             res[i][j] = a[i][j] - b[i][j];

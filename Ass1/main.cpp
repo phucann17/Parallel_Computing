@@ -12,9 +12,17 @@ using namespace std;
 //     }
 //     free(m);
 // }
-
+bool verify_matrix_multiplication(const matrix& A, const matrix& B, int n) {
+  for (int i = 0; i < n; ++i){
+    if (A[i] != B[i]){
+        return false;
+    }
+  }
+  return true;
+}
 int main(){
-    int n[1] = {5000};
+    int n[1] = {10000};
+    n_global = n[0];
     for (int s = 0; s < 1; ++s) {
         cout << "Implementation with matrix size: " << n[s] << endl;
         matrix A = create_matrix(n[s]);
@@ -37,12 +45,12 @@ int main(){
         // printf("Time of sequential naive matrix multiplication algorithm = %.6f s\n", end - start);
 
 
-        double start_3 = omp_get_wtime();
-        // cout << "hello !!!!" << endl;
-        sequential_matrix_multiplication_strassen(A, B, res_strassen_sequential, n[s]);
-        double end_3 = omp_get_wtime();
+        // double start_3 = omp_get_wtime();
+        // // cout << "hello !!!!" << endl;
+        // sequential_matrix_multiplication_strassen(A, B, res_strassen_sequential, n[s]);
+        // double end_3 = omp_get_wtime();
 
-        printf("Time of sequential Strassen matrix multiplication algorithm = %.6f s\n", end_3 - start_3);
+        // printf("Time of sequential Strassen matrix multiplication algorithm = %.6f s\n", end_3 - start_3);
         
         // // write_log("B.txt", B, n);
         // // write_log("res.txt", res, n);  
@@ -54,17 +62,24 @@ int main(){
 
         // printf("Time of parallel naive matrix multiplication algorithm = %.6f s\n", end_1- start_1);
 
-        // double start_1 = omp_get_wtime();
-        // openMP_transpose_parallel_matrix_multiplication_naive(A, B, res_strassen_sequential, n[s]);
-        // double end_1 = omp_get_wtime();
-        // printf("Time of transpose parallel naive matrix multiplication algorithm = %.6f s\n", end_1 - start_1);
-        //###############################################################################################
         double start_1 = omp_get_wtime();
-        openmp_parallel_matrix_multiplication_strassen(A, B, res_naive_parallel, n[s]);
+        openMP_transpose_parallel_matrix_multiplication_naive(A, B, res_strassen_sequential, n[s]);
+        // openmp_parallel_matrix_multiplication_strassen(A, B, res_naive_parallel, n[s]);
         double end_1 = omp_get_wtime();
-        printf("Time of parallel naive matrix multiplication algorithm = %.6f s\n", end_1 - start_1);
-        sequential_matrix_subtraction(res_strassen_sequential, res_naive_parallel, res_naive_sequential, n[s]);
-        write_log("A.txt", res_naive_sequential, n[s]);
+        printf("Time of transpose parallel naive matrix multiplication algorithm = %.6f s\n", end_1 - start_1);
+        //###############################################################################################
+        start_1 = omp_get_wtime();
+        openmp_parallel_matrix_multiplication_strassen(A, B, res_naive_parallel, n[s]);
+        end_1 = omp_get_wtime();
+        printf("Time of parallel strassen matrix multiplication algorithm = %.6f s\n", end_1 - start_1);
+        if (verify_matrix_multiplication(res_naive_parallel, res_strassen_sequential, n[0]) == false){
+            printf("Not equal!\n");
+        } else {
+            printf("OK!\n");
+        }
+
+        // sequential_matrix_subtraction(res_strassen_sequential, res_naive_parallel, res_naive_sequential, n[s]);
+        // write_log("A.txt", res_naive_sequential, n[s]);
         
         //###############################################################################################
     }
