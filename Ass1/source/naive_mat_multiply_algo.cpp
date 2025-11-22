@@ -65,33 +65,31 @@ matrix transpose(const matrix& B) {
     return BT;
 }
 
-matrix transpose_parallel(const matrix& B) {
-    unsigned int n = B.size();
+void openMP_transpose_parallel_matrix_multiplication_naive(const matrix& A, const matrix& B, matrix& res, unsigned int n, int num_thread){
     matrix BT = create_matrix(n);
-    #pragma omp parallel for collapse(2) schedule(static) num_threads(18)
-    for (unsigned int i = 0; i < n; ++i)
-        for (unsigned int j = 0; j < n; ++j)
-            BT[j][i] = B[i][j];
 
-    return BT;
-}
-
-void openMP_transpose_parallel_matrix_multiplication_naive(const matrix& A, const matrix& B, matrix& res, unsigned int n){
-    matrix BT = transpose_parallel(B);
-
-    #pragma omp parallel for collapse(2) schedule(static) num_threads(18)
-    for (unsigned int i = 0; i < n; ++i) {
-        for (unsigned int j = 0; j < n; ++j) {
-            int tmp = 0;
-            for (unsigned int k = 0; k < n; ++k)
-                tmp += A[i][k] * BT[j][k];
-            res[i][j] = tmp;
+    #pragma omp parallel num_threads(num_thread)
+    {
+        #pragma omp for collapse(2) schedule(static)
+        for (unsigned int i = 0; i < n; ++i)
+            for (unsigned int j = 0; j < n; ++j){
+                BT[j][i] = B[i][j];
+            }
+                
+        #pragma omp for collapse(2) schedule(static)
+        for (unsigned int i = 0; i < n; ++i) {
+            for (unsigned int j = 0; j < n; ++j) {
+                int tmp = 0;
+                for (unsigned int k = 0; k < n; ++k)
+                    tmp += A[i][k] * BT[j][k];
+                res[i][j] = tmp;
+            }
         }
     }
 }
 
 void openMP_parallel_matrix_multiplication_naive(const matrix& A, const matrix& B, matrix& res, unsigned int n) {
-    #pragma omp parallel for collapse(2) schedule(static) num_threads(8)
+    #pragma omp parallel for collapse(2) schedule(static) num_threads(NUM_THREADS)
     for (unsigned int i = 0; i < n; ++i) {
         for (unsigned int j = 0; j < n; ++j) {
             int tmp = 0;
@@ -102,4 +100,3 @@ void openMP_parallel_matrix_multiplication_naive(const matrix& A, const matrix& 
         } 
     }
 }
-

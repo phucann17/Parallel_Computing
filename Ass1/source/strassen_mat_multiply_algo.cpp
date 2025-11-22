@@ -177,7 +177,7 @@ void sequential_matrix_multiplication_strassen(const matrix& A, const matrix& B,
 void openmp_parallel_matrix_multiplication_strassen_operation(const matrix& A, const matrix& B, matrix& res, unsigned int n) {
     if (n <= ((n_global/4) + 1)) {
         // openMP_parallel_matrix_multiplication_naive(A, B, res, n);
-        openMP_transpose_parallel_matrix_multiplication_naive(A, B, res, n);
+        openMP_transpose_parallel_matrix_multiplication_naive(A, B, res, n, NUM_FOR);
         return;
     }
 
@@ -188,7 +188,7 @@ void openmp_parallel_matrix_multiplication_strassen_operation(const matrix& A, c
         matrix padded_res = create_matrix(padded_n);
 
         // Copy original matrices into padded matrices
-        #pragma omp parallel for collapse(2) schedule(static) num_threads(14)
+        // #pragma omp parallel for collapse(2) schedule(static) num_threads(NUM_THREADS)
         for (unsigned int i = 0; i < n; ++i) {
             for (unsigned int j = 0; j < n; ++j) {
                 padded_A[i][j] = A[i][j];
@@ -220,7 +220,7 @@ void openmp_parallel_matrix_multiplication_strassen_operation(const matrix& A, c
     matrix B21 = create_matrix(halfSize);
     matrix B22 = create_matrix(halfSize);
 
-    #pragma omp parallel for collapse(2) schedule(static) num_threads(14)
+    // #pragma omp parallel for collapse(2) schedule(static) num_threads(NUM_THREADS)
     for (int i = 0; i < halfSize; ++i) {
         for (int j = 0; j < halfSize; ++j) {
             A11[i][j] = A[i][j];
@@ -329,45 +329,7 @@ void openmp_parallel_matrix_multiplication_strassen_operation(const matrix& A, c
         openmp_parallel_matrix_multiplication_strassen_operation(tmp1, tmp2, M7, halfSize);
     }
                 
-    // // C12 = M3 + M5
-    // sequential_matrix_addition(M3, M5, C12, halfSize);
-    // // C21 = M2 + M4
-    // sequential_matrix_addition(M2, M4, C21, halfSize);
-
-    // // C11 = M1 + M4 - M5 + M7
-    // #pragma omp task shared(C11)
-    // {
-    //     matrix tmp1 = create_matrix(halfSize);
-    //     matrix tmp2 = create_matrix(halfSize);
-    //     sequential_matrix_addition(M1, M4, tmp1, halfSize);
-    //     sequential_matrix_subtraction(tmp1, M5, tmp2, halfSize);
-    //     sequential_matrix_addition(tmp2, M7, C11, halfSize);
-    // }
-
-    // // C22 = M1 - M2 + M3 + M6
-    // #pragma omp task shared(C22)
-    // {
-    //     matrix tmp1 = create_matrix(halfSize);
-    //     matrix tmp2 = create_matrix(halfSize);
-    //     sequential_matrix_subtraction(M1, M2, tmp1, halfSize);
-    //     sequential_matrix_addition(tmp1, M3, tmp2, halfSize);
-    //     sequential_matrix_addition(tmp2, M6, C22, halfSize);
-    // }
-    // matrix C11 = create_matrix(halfSize);
-    // matrix C12 = create_matrix(halfSize);
-    // matrix C21 = create_matrix(halfSize);
-    // matrix C22 = create_matrix(halfSize);
-    // // #pragma omp taskwait
-    // #pragma omp parallel for collapse(2) schedule(static) num_threads(8)
-    // for (int i = 0; i < halfSize; i++)
-    //     for (int j = 0; j < halfSize; j++) {
-    //         C11[i][j] = M1[i][j] + M4[i][j] - M5[i][j] + M7[i][j];
-    //         C12[i][j] = M3[i][j] + M5[i][j];
-    //         C21[i][j] = M2[i][j] + M4[i][j];
-    //         C22[i][j] = M1[i][j] - M2[i][j] + M3[i][j] + M6[i][j];
-    //     }
-    // cout << "Where is bug ?? " << endl;
-    #pragma omp parallel for collapse(2) schedule(static) num_threads(18)
+    #pragma omp parallel for collapse(2) schedule(static) num_threads(NUM_THREADS)
     for (int i = 0; i < halfSize; ++i) {
             for (int j = 0; j < halfSize; ++j) {
                 res[i][j] = M1[i][j] + M4[i][j] - M5[i][j] + M7[i][j];          // C11
@@ -381,9 +343,9 @@ void openmp_parallel_matrix_multiplication_strassen_operation(const matrix& A, c
 }
 
 void openmp_parallel_matrix_multiplication_strassen(const matrix& A, const matrix& B, matrix& res, unsigned int n){
-    omp_set_num_threads(8);
+    // omp_set_num_threads(8);
     omp_set_nested(1);
-    #pragma omp parallel
+    #pragma omp parallel num_threads(NUM_TASK)
     {
     #pragma omp single
      {

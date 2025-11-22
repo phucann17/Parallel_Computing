@@ -23,7 +23,7 @@ void sequential_matrix_subtraction(const matrix& a, const matrix& b, matrix& res
 }
 
 void parallel_matrix_addition(const matrix& a, const matrix& b, matrix& res, int n) {
-    #pragma omp parallel for collapse(2) schedule(static) num_threads(6)
+    // #pragma omp parallel for collapse(2) schedule(static) num_threads(NUM_FOR)
     for (int i = 0; i < n; ++i) {
         for (int j = 0; j < n; ++j) {
             res[i][j] = a[i][j] + b[i][j];
@@ -32,7 +32,7 @@ void parallel_matrix_addition(const matrix& a, const matrix& b, matrix& res, int
 }
 
 void parallel_matrix_subtraction(const matrix& a, const matrix& b, matrix& res, int n) {
-    #pragma omp parallel for collapse(2) schedule(static) num_threads(6)
+    // #pragma omp parallel for collapse(2) schedule(static) num_threads(NUM_FOR)
     for (int i = 0; i < n; ++i) {
         for (int j = 0; j < n; ++j) {
             res[i][j] = a[i][j] - b[i][j];
