@@ -19,5 +19,7 @@ $(TARGET): $(OBJECTS)
 %.o: %.cpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
+run: 
+	mpirun -np 8 ./$(TARGET)
 clean:
 	rm -f $(TARGET) $(OBJECTS)
