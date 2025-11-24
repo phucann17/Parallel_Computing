@@ -8,14 +8,14 @@ using namespace std;
 
 
 void random_matrix(vector<int> &M, int n) {
-    #pragma omp parallel for schedule(static) num_threads(10)
+    #pragma omp parallel for schedule(static) num_threads(20)
     for (int i = 0; i < n * n; i++)
         M[i] = rand() % 10;
 }
 
 // CPU OpenMP matrix multiply
 void matmul_cpu(const vector<int> &A, const vector<int> &B, vector<int> &C, int n) {
-    #pragma omp parallel for collapse(2) schedule(static) num_threads(10)
+    #pragma omp parallel for collapse(2) schedule(static) num_threads(20)
     for (int i = 0; i < n; i++)
         for (int j = 0; j < n; j++) {
             int tmp = 0;
@@ -62,7 +62,7 @@ bool verify_matrix(const vector<int> &C1, const vector<int> &C2, int n) {
 }
 
 int main() {
-    int n = 3000;  
+    int n = 2000;  
     vector<int> A(n * n), B(n * n), C_cpu(n * n), C_gpu(n * n);
 
     random_matrix(A, n);

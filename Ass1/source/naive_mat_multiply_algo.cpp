@@ -59,7 +59,7 @@ void sequential_matrix_multiplication_naive(const matrix& A, const matrix& B, ma
 matrix transpose(const matrix& B) {
     unsigned int n = B.size();
     matrix BT = create_matrix(n);
-    // #pragma omp parallel for collapse(2) schedule(static) num_threads(8)
+    #pragma omp parallel for collapse(2) schedule(static) num_threads(20)
     for (unsigned int i = 0; i < n; ++i)
         for (unsigned int j = 0; j < n; ++j)
             BT[j][i] = B[i][j];
@@ -67,16 +67,6 @@ matrix transpose(const matrix& B) {
     return BT;
 }
 
-matrix transpose_parallel(const matrix& B) {
-    unsigned int n = B.size();
-    matrix BT = create_matrix(n);
-    #pragma omp parallel for collapse(2) schedule(static) num_threads(10)
-    for (unsigned int i = 0; i < n; ++i)
-        for (unsigned int j = 0; j < n; ++j)
-            BT[j][i] = B[i][j];
-
-    return BT;
-}
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // void sequential_transpose_matrix_multiplication_naive(const matrix& A, const matrix& B, matrix& res, unsigned int n){
 //     matrix BT = transpose_parallel(B);
@@ -93,16 +83,25 @@ matrix transpose_parallel(const matrix& B) {
 // }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void openMP_transpose_parallel_matrix_multiplication_naive(const matrix& A, const matrix& B, matrix& res, unsigned int n){
-    matrix BT = transpose_parallel(B);
+void openMP_transpose_parallel_matrix_multiplication_naive(const matrix& A, const matrix& B, matrix& res, unsigned int n, int num_thread){
+    matrix BT = create_matrix(n);
 
-    #pragma omp parallel for collapse(2) schedule(static) num_threads(10)
-    for (unsigned int i = 0; i < n; ++i) {
-        for (unsigned int j = 0; j < n; ++j) {
-            int tmp = 0;
-            for (unsigned int k = 0; k < n; ++k)
-                tmp += A[i][k] * BT[j][k];
-            res[i][j] = tmp;
+    #pragma omp parallel num_threads(num_thread)
+    {
+        #pragma omp for collapse(2) schedule(static)
+        for (unsigned int i = 0; i < n; ++i)
+            for (unsigned int j = 0; j < n; ++j){
+                BT[j][i] = B[i][j];
+            }
+                
+        #pragma omp for collapse(2) schedule(static)
+        for (unsigned int i = 0; i < n; ++i) {
+            for (unsigned int j = 0; j < n; ++j) {
+                int tmp = 0;
+                for (unsigned int k = 0; k < n; ++k)
+                    tmp += A[i][k] * BT[j][k];
+                res[i][j] = tmp;
+            }
         }
     }
 }
@@ -130,6 +129,8 @@ std::vector<int> flatten_matrix(const matrix& M) {
 }
 
 void openMP_gpu_matrix_multiply(const matrix& A, const matrix& B, matrix& res) {
+    int num_teams = 120;        
+    int thread_limit = 256; 
     unsigned int n = A.size();
     matrix BT = transpose(B);
 
@@ -137,17 +138,17 @@ void openMP_gpu_matrix_multiply(const matrix& A, const matrix& B, matrix& res) {
     int* BT_flat = new int[n*n];
     int* res_flat = new int[n*n];
 
-    #pragma omp parallel for collapse(2) schedule(static) num_threads(10)
+    #pragma omp parallel for collapse(2) schedule(static) num_threads(20)
     for (unsigned int i = 0; i < n; ++i)
         for (unsigned int j = 0; j < n; ++j) {
             A_flat[i*n+j] = A[i][j];
-            BT_flat[i*n+j] = BT[j][i]; // transpose
+            BT_flat[i*n+j] = BT[i][j]; // transpose
             res_flat[i*n+j] = 0;
         }
 
     #pragma omp target teams distribute parallel for collapse(2) \
-        map(to: A_flat[0:n*n], BT_flat[0:n*n]) \
-        map(from: res_flat[0:n*n])
+        map(to: A_flat[0:n*n], BT_flat[0:n*n]) map(from: res_flat[0:n*n]) \
+        num_teams(num_teams) thread_limit(thread_limit)
     for (unsigned int i = 0; i < n; ++i)
         for (unsigned int j = 0; j < n; ++j) {
             int tmp = 0;
@@ -157,7 +158,7 @@ void openMP_gpu_matrix_multiply(const matrix& A, const matrix& B, matrix& res) {
         }
 
 
-    #pragma omp parallel for collapse(2) schedule(static) num_threads(10)
+    // #pragma omp parallel for collapse(2) schedule(static) num_threads(20)
     for (unsigned int i = 0; i < n; ++i)
         for (unsigned int j = 0; j < n; ++j)
             res[i][j] = res_flat[i*n+j];

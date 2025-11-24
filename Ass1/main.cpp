@@ -6,15 +6,17 @@
 
 using namespace std;
 
-// void free_matrix(matrix m, unsigned int n){
-//     for (int i = 0; i < n; ++i){
-//         free(m[i]);
-//     }
-//     free(m);
-// }
+bool verify_matrix_multiplication(const matrix& A, const matrix& B, int n) {
+  for (int i = 0; i < n; ++i){
+    if (A[i] != B[i]){
+        return false;
+    }
+  }
+  return true;
+}
 
 int main(){
-    int n[1] = {7000};
+    int n[1] = {6000};
     for (int s = 0; s < 1; ++s) {
         cout << "Implementation with matrix size: " << n[s] << endl;
         matrix A = create_matrix(n[s]);
@@ -62,17 +64,23 @@ int main(){
         // printf("Time of parallel naive matrix multiplication algorithm = %.6f s\n", end_1- start_1);
 
         double start_1 = omp_get_wtime();
-        // openMP_transpose_parallel_matrix_multiplication_naive(A, B, res_strassen_sequential, n[s]);
-        openMP_gpu_matrix_multiply(A, B, res_strassen_sequential);
+        openMP_transpose_parallel_matrix_multiplication_naive(A, B, res_strassen_sequential, n[s], NUM_THREADS);
+        // openMP_gpu_matrix_multiply(A, B, res_strassen_sequential);
         double end_1 = omp_get_wtime();
         printf("Time of transpose parallel naive matrix multiplication algorithm = %.6f s\n", end_1 - start_1);
         // //###############################################################################################
-        // start_1 = omp_get_wtime();
-        // openmp_parallel_matrix_multiplication_strassen(A, B, res_naive_parallel, n[s]);
-        // end_1 = omp_get_wtime();
-        // printf("Time of parallel naive matrix multiplication algorithm = %.6f s\n", end_1 - start_1);
-        // sequential_matrix_subtraction(res_strassen_sequential, res_naive_parallel, res_naive_sequential, n[s]);
-        // write_log("A.txt", res_naive_sequential, n[s]);
+        start_1 = omp_get_wtime();
+        openMP_gpu_matrix_multiply(A, B, res_naive_parallel);
+        end_1 = omp_get_wtime();
+        printf("Time of parallel naive matrix multiplication algorithm = %.6f s\n", end_1 - start_1);
+        start_1 = omp_get_wtime();
+        if (verify_matrix_multiplication(res_naive_parallel, res_strassen_sequential, n[0]) == false){
+            printf("Not equal!\n");
+        } else {
+            printf("OK!\n");
+        }
+        end_1  = omp_get_wtime();
+        printf("Time to check = %.6f s\n", end_1 - start_1);
         
         //###############################################################################################
     }
