@@ -37,7 +37,7 @@ unsigned int next_power_of_two(unsigned int n) {
 }
 
 void sequential_matrix_multiplication_strassen(const matrix& A, const matrix& B, matrix& res, unsigned int n) {
-    if (n <= 1024) {
+    if (n <= 16) {
         sequential_transpose_matrix_multiplication_naive(A, B, res, n);
         return;
     }
@@ -169,7 +169,7 @@ void sequential_matrix_multiplication_strassen(const matrix& A, const matrix& B,
 
 void mpi_parallel_matrix_multiplication_strassen(const matrix& A, const matrix& B, matrix& res, unsigned int n, int size, int rank) {
     if (n <= (n_global / 1.5)) {
-        sequential_transpose_matrix_multiplication_naive(A, B, res, n);
+        openMP_transpose_parallel_matrix_multiplication_naive(A, B, res, n, 5);
         return;
     }
     int halfSize = n / 2;
@@ -337,6 +337,7 @@ void mpi_parallel_matrix_multiplication_strassen(const matrix& A, const matrix& 
     if (rank != 6 % size) { for(int i=0; i<halfSize; ++i) for(int j=0; j<halfSize; ++j) M7[i][j] = flat_buffer[i*halfSize + j]; }
 
     // assemble final result for all processes
+    #pragma omp parallel for collapse(2) schedule(dynamic) num_threads(5)
     for (int i = 0; i < halfSize; ++i) {
             for (int j = 0; j < halfSize; ++j) {
                 res[i][j] = M1[i][j] + M4[i][j] - M5[i][j] + M7[i][j];          // C11
