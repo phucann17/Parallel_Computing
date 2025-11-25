@@ -20,6 +20,6 @@ $(TARGET): $(OBJECTS)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 run: 
-	mpirun -np 8 ./$(TARGET)
+	mpirun -np 2 ./$(TARGET)
 clean:
 	rm -f $(TARGET) $(OBJECTS)
