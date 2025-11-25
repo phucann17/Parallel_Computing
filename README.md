@@ -71,11 +71,12 @@ Run with custom number of processes:
 make run NP=4
 ```
 
-⚠️ Memory Usage Warning
+*******Memory Usage Warning
 
 If you run the program with matrix size ≥ 10,000, please limit execution to a maximum of 4 MPI processes.
 
 Using more than 4 processes can easily exhaust system memory (including swap), which may cause the program to crash or the OS to terminate the process.
+
 With matrix size 10,000 × 10,000, running with 4 processes already requires ~12 GB of RAM due to data replication and temporary buffers used by the algorithm. This notice is also used for Runing on Multiple Machines.
 
 This will execute:
@@ -115,6 +116,20 @@ make run_nodes NP=3
 Will execute:
 ```bash
 mpirun -np 18 --hostfile mpi-hosts.txt ./main
+```
+
+Rewritten Version
+
+If you update or modify the source code, you must rebuild the project and then redeploy it to all nodes.
+
+To redeploy, simply run:
+```bash
+./send_node.sh
+```
+
+Before running the script for the first time, make sure it is executable:
+```bash
+chmod +x send_node.sh
 ```
 
 ## 3. Project Structure
