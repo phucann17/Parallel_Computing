@@ -56,7 +56,7 @@ void sequential_matrix_multiplication_strassen(const matrix& A, const matrix& B,
         }
         // Perform Strassen's algorithm on padded matrices
         sequential_matrix_multiplication_strassen(padded_A, padded_B, padded_res, padded_n);
-
+        #pragma omp parallel for collapse(2) schedule(dynamic) num_threads(5)
         // Copy result back to original result matrix
         for (unsigned int i = 0; i < n; ++i) {
             for (unsigned int j = 0; j < n; ++j) {

@@ -43,7 +43,7 @@ cd Ass1
 Use the provided `Makefile` to compile the entire project.
 
 ```bash
-make
+make all
 ```
 
 This command will create an executable file named `main` in the root directory.
@@ -55,11 +55,66 @@ make clean
 
 ### Step 3: Execute the Program
 
-The application takes only one command.
+Run on a Single Machine (MPI Local Execution)
 
-**Syntax:**
+Use the run target.
+
+You can configure how many MPI processes to launch using the NP variable.
+
+Default (NP = 2):
+```bash
+make run
+```
+
+Run with custom number of processes:
+```bash
+make run NP=4
+```
+
+⚠️ Memory Usage Warning
+
+If you run the program with matrix size ≥ 10,000, please limit execution to a maximum of 4 MPI processes.
+
+Using more than 4 processes can easily exhaust system memory (including swap), which may cause the program to crash or the OS to terminate the process.
+With matrix size 10,000 × 10,000, running with 4 processes already requires ~12 GB of RAM due to data replication and temporary buffers used by the algorithm. This notice is also used for Runing on Multiple Machines.
+
+This will execute:
 ```bash
 mpirun -np 4 ./main
+```
+
+Run on Multiple Machines (MPI Cluster Execution)
+
+If you have multiple nodes listed inside mpi-hosts.txt, use the run_nodes target.
+```bash
+make run_nodes
+```
+
+The number of processes is calculated automatically as:
+```bash
+NP * 6
+```
+
+In this assignment, we will use 6 node:
+```bash
+MPI-node5
+MPI-node7
+MPI-node9
+MPI-node15
+MPI-node14
+MPI-node3
+```
+
+(Assuming your cluster has 6 nodes, each launching NP processes.)
+
+For example:
+```bash
+make run_nodes NP=3
+```
+
+Will execute:
+```bash
+mpirun -np 18 --hostfile mpi-hosts.txt ./main
 ```
 
 ## 3. Project Structure
@@ -88,4 +143,5 @@ README.md                 # This file
 *   **[Your Name Here]** - Team Lead, Core Architect (Sequential Implementations & Testing Framework)
 *   **[Teammate 2 Name]** - OpenMP Specialist (Shared Memory Parallelization & Performance Analysis)
 *   **[Teammate 3 Name]** - MPI Specialist (Distributed Memory Parallelization & Scalability Study)
+
 ```
