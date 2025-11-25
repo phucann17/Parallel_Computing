@@ -55,11 +55,59 @@ make clean
 
 ### Step 3: Execute the Program
 
-The application takes only one command.
+Run on a Single Machine (MPI Local Execution)
 
-**Syntax:**
+Use the run target.
+
+You can configure how many MPI processes to launch using the NP variable.
+
+Default (NP = 2):
 ```bash
 make run
+```
+
+Run with custom number of processes:
+```bash
+make run NP=4
+```
+
+This will execute:
+```bash
+mpirun -np 4 ./main
+```
+
+Run on Multiple Machines (MPI Cluster Execution)
+
+If you have multiple nodes listed inside mpi-hosts.txt, use the run_nodes target.
+```bash
+make run_nodes
+```
+
+The number of processes is calculated automatically as:
+```bash
+NP * 6
+```
+
+In this assignment, we will use 6 node:
+```bash
+MPI-node5
+MPI-node7
+MPI-node9
+MPI-node15
+MPI-node14
+MPI-node3
+```
+
+(Assuming your cluster has 6 nodes, each launching NP processes.)
+
+For example:
+```bash
+make run_nodes NP=3
+```
+
+Will execute:
+```bash
+mpirun -np 18 --hostfile mpi-hosts.txt ./main
 ```
 
 ## 3. Project Structure
