@@ -37,7 +37,7 @@ unsigned int next_power_of_two(unsigned int n) {
 }
 
 void sequential_matrix_multiplication_strassen(const matrix& A, const matrix& B, matrix& res, unsigned int n) {
-    if (n <= 1024) {
+    if (n <= 16) {
         sequential_transpose_matrix_multiplication_naive(A, B, res, n);
         return;
     }

@@ -43,7 +43,7 @@ cd Ass1
 Use the provided `Makefile` to compile the entire project.
 
 ```bash
-make
+make all
 ```
 
 This command will create an executable file named `main` in the root directory.
@@ -59,7 +59,7 @@ The application takes only one command.
 
 **Syntax:**
 ```bash
-mpirun -np 4 ./main
+make run
 ```
 
 ## 3. Project Structure
