@@ -168,7 +168,7 @@ void sequential_matrix_multiplication_strassen(const matrix& A, const matrix& B,
 }
 
 void mpi_parallel_matrix_multiplication_strassen(const matrix& A, const matrix& B, matrix& res, unsigned int n, int size, int rank) {
-    if (n <= 5192) {
+    if (n <= (n_global / 1.5)) {
         sequential_transpose_matrix_multiplication_naive(A, B, res, n);
         return;
     }

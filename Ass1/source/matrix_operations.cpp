@@ -1,7 +1,7 @@
 #include "matrix_operations.h"
 #include <cstdio>
 #include <cstdlib>
-
+unsigned int n_global = 0;
 matrix create_matrix(int n) {
     return matrix(n, std::vector<int> (n, 0));
 }

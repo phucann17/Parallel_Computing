@@ -36,7 +36,8 @@ int main(int argc, char** argv) {
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
 
-    int n[1] = {10000};
+    int n[1] = {2000};
+    n_global = n[0];
     for (int s = 0; s < 1; ++s) {
         if (rank == 0) {
             cout << "Implementation with matrix size: " << n[s] << endl;
@@ -61,29 +62,29 @@ int main(int argc, char** argv) {
         }
 
         
-        // if (rank == 0){
-        //     double s0 = MPI_Wtime();
-        //     sequential_transpose_matrix_multiplication_naive(A, B, res_naive_parallel, n[s]);
-        //     // sequential_matrix_multiplication_naive(A, B, res_naive_parallel, n[s]);
-        //     double e0 = MPI_Wtime();
-        //     printf("Time of sequential naive matrix multiplication algorithm = %.6f s\n", e0 - s0);
+        if (rank == 0){
+            double s0 = MPI_Wtime();
+            sequential_transpose_matrix_multiplication_naive(A, B, res_naive_parallel, n[s]);
+            // sequential_matrix_multiplication_naive(A, B, res_naive_parallel, n[s]);
+            double e0 = MPI_Wtime();
+            printf("Time of sequential naive matrix multiplication algorithm = %.6f s\n", e0 - s0);
 
-        //     // s0 = MPI_Wtime();
-        //     // sequential_transpose_matrix_multiplication_naive(A, B, res_strassen_parallel, n[s]);
-        //     // e0 = MPI_Wtime();
-        //     // printf("Time of transpose sequential naive matrix multiplication algorithm = %.6f s\n", e0 - s0);
-        //     // if(!verify_matrix_multiplication(res_naive_parallel, res_strassen_parallel, n[s])){
-        //     //     printf("Sequential naive != Transpose sequential naive\n");
-        //     // }
+            // s0 = MPI_Wtime();
+            // sequential_transpose_matrix_multiplication_naive(A, B, res_strassen_parallel, n[s]);
+            // e0 = MPI_Wtime();
+            // printf("Time of transpose sequential naive matrix multiplication algorithm = %.6f s\n", e0 - s0);
+            // if(!verify_matrix_multiplication(res_naive_parallel, res_strassen_parallel, n[s])){
+            //     printf("Sequential naive != Transpose sequential naive\n");
+            // }
                 
-        //     s0 = MPI_Wtime();
-        //     sequential_matrix_multiplication_strassen(A, B, res_strassen_parallel, n[s]);
-        //     e0 = MPI_Wtime();
-        //     printf("Time of sequential strassen matrix multiplication algorithm = %.6f s\n", e0 - s0);
-        //     if(!verify_matrix_multiplication(res_naive_parallel, res_strassen_parallel, n[s])){
-        //         printf("Sequential naive != Sequential strassen\n");
-        //     }
-        // }
+            s0 = MPI_Wtime();
+            sequential_matrix_multiplication_strassen(A, B, res_strassen_parallel, n[s]);
+            e0 = MPI_Wtime();
+            printf("Time of sequential strassen matrix multiplication algorithm = %.6f s\n", e0 - s0);
+            if(!verify_matrix_multiplication(res_naive_parallel, res_strassen_parallel, n[s])){
+                printf("Sequential naive != Sequential strassen\n");
+            }
+        }
         MPI_Barrier(MPI_COMM_WORLD); // Synchronize before start timing
         double start_4 = MPI_Wtime();
         mpi_parallel_matrix_multiplication_strassen(A, B, res_strassen_parallel, n[s], size, rank);
@@ -91,9 +92,9 @@ int main(int argc, char** argv) {
         double end_4 = MPI_Wtime();
         if (rank == 0) {
             printf("Time of mpi parallel strassen matrix multiplication algorithm = %.6f s\n", end_4 - start_4);
-            // if(!verify_matrix_multiplication(res_naive_parallel, res_strassen_parallel, n[s])){
-            //     printf("Sequential naive != Parallel strassen\n");
-            // }
+            if(!verify_matrix_multiplication(res_naive_parallel, res_strassen_parallel, n[s])){
+                printf("Sequential naive != Parallel strassen\n");
+            }
         }
     }
 
