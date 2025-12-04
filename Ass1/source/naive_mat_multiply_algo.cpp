@@ -65,18 +65,35 @@ matrix transpose(const matrix& B) {
     return BT;
 }
 
-void openMP_transpose_parallel_matrix_multiplication_naive(const matrix& A, const matrix& B, matrix& res, unsigned int n, int num_thread){
+void sequential_transpose_matrix_multiplication_naive(const matrix& A, const matrix& B, matrix& res, unsigned int n) {
+    matrix BT = create_matrix(n);
+    for (unsigned int i = 0; i < n; ++i)
+        for (unsigned int j = 0; j < n; ++j){
+               BT[j][i] = B[i][j];
+    }
+    for (unsigned int i = 0; i < n; ++i) {
+           for (unsigned int j = 0; j < n; ++j) {
+               int tmp = 0;
+               for (unsigned int k = 0; k < n; ++k)
+                   tmp += A[i][k] * BT[j][k];
+               res[i][j] = tmp;
+           }
+   }
+}
+
+
+void openMP_transpose_parallel_matrix_multiplication_naive(const matrix& A, const matrix& B, matrix& res, unsigned int n){
     matrix BT = create_matrix(n);
 
-    #pragma omp parallel num_threads(num_thread)
+    #pragma omp parallel
     {
-        #pragma omp for collapse(2) schedule(static)
+        #pragma omp for collapse(2) schedule(dynamic)
         for (unsigned int i = 0; i < n; ++i)
             for (unsigned int j = 0; j < n; ++j){
                 BT[j][i] = B[i][j];
             }
                 
-        #pragma omp for collapse(2) schedule(static)
+        #pragma omp for collapse(2) schedule(dynamic)
         for (unsigned int i = 0; i < n; ++i) {
             for (unsigned int j = 0; j < n; ++j) {
                 int tmp = 0;

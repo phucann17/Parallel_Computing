@@ -37,8 +37,8 @@ unsigned int next_power_of_two(unsigned int n) {
 }
 
 void sequential_matrix_multiplication_strassen(const matrix& A, const matrix& B, matrix& res, unsigned int n) {
-    if (n <= 16) {
-        sequential_matrix_multiplication_naive(A, B, res, n);
+    if (n <= 64) {
+        sequential_transpose_matrix_multiplication_naive(A, B, res, n);
         return;
     }
 
@@ -177,7 +177,7 @@ void sequential_matrix_multiplication_strassen(const matrix& A, const matrix& B,
 void openmp_parallel_matrix_multiplication_strassen_operation(const matrix& A, const matrix& B, matrix& res, unsigned int n) {
     if (n <= ((n_global/4) + 1)) {
         // openMP_parallel_matrix_multiplication_naive(A, B, res, n);
-        openMP_transpose_parallel_matrix_multiplication_naive(A, B, res, n, NUM_FOR);
+        openMP_transpose_parallel_matrix_multiplication_naive(A, B, res, n);
         return;
     }
 
@@ -329,7 +329,7 @@ void openmp_parallel_matrix_multiplication_strassen_operation(const matrix& A, c
         openmp_parallel_matrix_multiplication_strassen_operation(tmp1, tmp2, M7, halfSize);
     }
                 
-    #pragma omp parallel for collapse(2) schedule(static) num_threads(NUM_THREADS)
+    #pragma omp parallel for collapse(2) schedule(dynamic)
     for (int i = 0; i < halfSize; ++i) {
             for (int j = 0; j < halfSize; ++j) {
                 res[i][j] = M1[i][j] + M4[i][j] - M5[i][j] + M7[i][j];          // C11
@@ -345,7 +345,7 @@ void openmp_parallel_matrix_multiplication_strassen_operation(const matrix& A, c
 void openmp_parallel_matrix_multiplication_strassen(const matrix& A, const matrix& B, matrix& res, unsigned int n){
     // omp_set_num_threads(8);
     omp_set_nested(1);
-    #pragma omp parallel num_threads(NUM_TASK)
+    #pragma omp parallel
     {
     #pragma omp single
      {
