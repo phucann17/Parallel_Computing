@@ -1,0 +1,1 @@
+ g++ -std=c++17 -O3 -Wall -Iinclude -fopenmp -foffload=nvptx-none -fcf-protection=none -no-pie -fno-stack-protector test.cpp -o test

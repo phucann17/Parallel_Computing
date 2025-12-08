@@ -59,7 +59,7 @@ void sequential_matrix_multiplication_naive(const matrix& A, const matrix& B, ma
 matrix transpose(const matrix& B) {
     unsigned int n = B.size();
     matrix BT = create_matrix(n);
-    #pragma omp parallel for collapse(2) schedule(static) num_threads(20)
+    // #pragma omp parallel for collapse(2) schedule(static) num_threads(20)
     for (unsigned int i = 0; i < n; ++i)
         for (unsigned int j = 0; j < n; ++j)
             BT[j][i] = B[i][j];
@@ -68,33 +68,35 @@ matrix transpose(const matrix& B) {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// void sequential_transpose_matrix_multiplication_naive(const matrix& A, const matrix& B, matrix& res, unsigned int n){
-//     matrix BT = transpose_parallel(B);
-
-//     //#pragma omp parallel for collapse(2) schedule(static) num_threads(10)
-//     for (unsigned int i = 0; i < n; ++i) {
-//         for (unsigned int j = 0; j < n; ++j) {
-//             int tmp = 0;
-//             for (unsigned int k = 0; k < n; ++k)
-//                 tmp += A[i][k] * BT[j][k];
-//             res[i][j] = tmp;
-//         }
-//     }
-// }
+void sequential_transpose_matrix_multiplication_naive(const matrix& A, const matrix& B, matrix& res, unsigned int n) {
+    matrix BT = create_matrix(n);
+    for (unsigned int i = 0; i < n; ++i)
+        for (unsigned int j = 0; j < n; ++j){
+               BT[j][i] = B[i][j];
+    }
+    for (unsigned int i = 0; i < n; ++i) {
+           for (unsigned int j = 0; j < n; ++j) {
+               int tmp = 0;
+               for (unsigned int k = 0; k < n; ++k)
+                   tmp += A[i][k] * BT[j][k];
+               res[i][j] = tmp;
+           }
+   }
+}
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void openMP_transpose_parallel_matrix_multiplication_naive(const matrix& A, const matrix& B, matrix& res, unsigned int n, int num_thread){
+void openMP_transpose_parallel_matrix_multiplication_naive(const matrix& A, const matrix& B, matrix& res, unsigned int n){
     matrix BT = create_matrix(n);
 
-    #pragma omp parallel num_threads(num_thread)
+    #pragma omp parallel
     {
-        #pragma omp for collapse(2) schedule(static)
+        #pragma omp for collapse(2) schedule(dynamic)
         for (unsigned int i = 0; i < n; ++i)
             for (unsigned int j = 0; j < n; ++j){
                 BT[j][i] = B[i][j];
             }
                 
-        #pragma omp for collapse(2) schedule(static)
+        #pragma omp for collapse(2) schedule(dynamic)
         for (unsigned int i = 0; i < n; ++i) {
             for (unsigned int j = 0; j < n; ++j) {
                 int tmp = 0;
@@ -107,7 +109,7 @@ void openMP_transpose_parallel_matrix_multiplication_naive(const matrix& A, cons
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void openMP_parallel_matrix_multiplication_naive(const matrix& A, const matrix& B, matrix& res, unsigned int n) {
-    #pragma omp parallel for collapse(2) schedule(static) num_threads(8)
+    #pragma omp parallel for collapse(2) schedule(static) num_threads(NUM_THREADS)
     for (unsigned int i = 0; i < n; ++i) {
         for (unsigned int j = 0; j < n; ++j) {
             int tmp = 0;
@@ -129,39 +131,64 @@ std::vector<int> flatten_matrix(const matrix& M) {
 }
 
 void openMP_gpu_matrix_multiply(const matrix& A, const matrix& B, matrix& res) {
-    int num_teams = 120;        
-    int thread_limit = 256; 
     unsigned int n = A.size();
+    const int BK = 32;
+
+    // ---- Tạo BT transpose ----
     matrix BT = transpose(B);
 
-    int* A_flat = new int[n*n];
-    int* BT_flat = new int[n*n];
-    int* res_flat = new int[n*n];
+    // ---- Flatten ----
+    int *A_flat = new int[n*n];
+    int *BT_flat = new int[n*n];
+    int *res_flat = new int[n*n];
 
-    #pragma omp parallel for collapse(2) schedule(static) num_threads(20)
+    #pragma omp parallel for collapse(2)
     for (unsigned int i = 0; i < n; ++i)
         for (unsigned int j = 0; j < n; ++j) {
-            A_flat[i*n+j] = A[i][j];
-            BT_flat[i*n+j] = BT[i][j]; // transpose
-            res_flat[i*n+j] = 0;
+            A_flat[i*n + j] = A[i][j];
+            BT_flat[i*n + j] = BT[i][j];
+            res_flat[i*n + j] = 0;
         }
 
+    // ---- Copy A, BT to device ----
+    #pragma omp target enter data \
+        map(to : A_flat[0:n*n], BT_flat[0:n*n]) \
+        map(alloc : res_flat[0:n*n])
+
+    int num_teams = (n*n + 255) / 256;
+    int thread_limit = 256;
+
+    // ---- GPU kernel ----
     #pragma omp target teams distribute parallel for collapse(2) \
-        map(to: A_flat[0:n*n], BT_flat[0:n*n]) map(from: res_flat[0:n*n]) \
         num_teams(num_teams) thread_limit(thread_limit)
     for (unsigned int i = 0; i < n; ++i)
         for (unsigned int j = 0; j < n; ++j) {
             int tmp = 0;
-            for (unsigned int k = 0; k < n; ++k)
-                tmp += A_flat[i*n+k] * BT_flat[j*n+k];
-            res_flat[i*n+j] = tmp;
+
+            for (unsigned int kb = 0; kb < n; kb += BK) {
+                unsigned int limit = (kb + BK > n ? n - kb : BK);
+
+                #pragma omp simd reduction(+:tmp)
+                for (unsigned int k = 0; k < limit; ++k)
+                    tmp += A_flat[i*n + (kb + k)] *
+                           BT_flat[j*n + (kb + k)];
+            }
+
+            res_flat[i*n + j] = tmp;
         }
 
+    // ---- Copy result back ----
+    #pragma omp target update from(res_flat[0:n*n])
 
-    // #pragma omp parallel for collapse(2) schedule(static) num_threads(20)
+    // ---- Free device memory ----
+    #pragma omp target exit data \
+        map(release: A_flat[0:n*n], BT_flat[0:n*n], res_flat[0:n*n])
+
+    // ---- Copy flattened result vào res ----
+    #pragma omp parallel for collapse(2)
     for (unsigned int i = 0; i < n; ++i)
         for (unsigned int j = 0; j < n; ++j)
-            res[i][j] = res_flat[i*n+j];
+            res[i][j] = res_flat[i*n + j];
 
     delete[] A_flat;
     delete[] BT_flat;

@@ -37,8 +37,8 @@ unsigned int next_power_of_two(unsigned int n) {
 }
 
 void sequential_matrix_multiplication_strassen(const matrix& A, const matrix& B, matrix& res, unsigned int n) {
-    if (n <= 16) {
-        sequential_matrix_multiplication_naive(A, B, res, n);
+    if (n <= 64) {
+        sequential_transpose_matrix_multiplication_naive(A, B, res, n);
         return;
     }
 
@@ -174,10 +174,10 @@ void sequential_matrix_multiplication_strassen(const matrix& A, const matrix& B,
     }
 }
 
-void openmp_parallel_matrix_multiplication_strassen_operation(const matrix& A, const matrix& B, matrix& res, unsigned int n) {
+void openmp_parallel_matrix_multiplication_strassen_operation(const matrix& A, const matrix& B, matrix& res, unsigned int n, bool useGPU) {
     if (n <= ((n_global/4) + 1)) {
-        // openMP_parallel_matrix_multiplication_naive(A, B, res, n);
-        openMP_transpose_parallel_matrix_multiplication_naive(A, B, res, n, NUM_FOR);
+        useGPU == 1 ? openMP_gpu_matrix_multiply(A, B, res)
+                    : openMP_transpose_parallel_matrix_multiplication_naive(A, B, res, n);
         return;
     }
 
@@ -197,7 +197,7 @@ void openmp_parallel_matrix_multiplication_strassen_operation(const matrix& A, c
         }
 
         // Perform Strassen's algorithm on padded matrices
-        openmp_parallel_matrix_multiplication_strassen_operation(padded_A, padded_B, padded_res, padded_n);
+        openmp_parallel_matrix_multiplication_strassen_operation(padded_A, padded_B, padded_res, padded_n, useGPU);
 
         // Copy result back to original result matrix
         for (unsigned int i = 0; i < n; ++i) {
@@ -258,31 +258,31 @@ void openmp_parallel_matrix_multiplication_strassen_operation(const matrix& A, c
             matrix tmp2 = create_matrix(halfSize);
             parallel_matrix_addition(A11, A22, tmp1, halfSize);
             parallel_matrix_addition(B11, B22, tmp2, halfSize);
-            openmp_parallel_matrix_multiplication_strassen_operation(tmp1, tmp2, M1, halfSize);
+            openmp_parallel_matrix_multiplication_strassen_operation(tmp1, tmp2, M1, halfSize, useGPU);
         }
         #pragma omp task shared(M2)
         {
             matrix tmp1 = create_matrix(halfSize);
             parallel_matrix_addition(A21, A22, tmp1, halfSize);
-            openmp_parallel_matrix_multiplication_strassen_operation(tmp1, B11, M2, halfSize);
+            openmp_parallel_matrix_multiplication_strassen_operation(tmp1, B11, M2, halfSize, useGPU);
         }
         #pragma omp task shared(M3)
         {
             matrix tmp1 = create_matrix(halfSize);
             parallel_matrix_subtraction(B12, B22, tmp1, halfSize);
-            openmp_parallel_matrix_multiplication_strassen_operation(A11, tmp1, M3, halfSize);
+            openmp_parallel_matrix_multiplication_strassen_operation(A11, tmp1, M3, halfSize, useGPU);
         }
         #pragma omp task shared(M4)
         {
             matrix tmp1 = create_matrix(halfSize);
             parallel_matrix_subtraction(B21, B11, tmp1, halfSize);
-            openmp_parallel_matrix_multiplication_strassen_operation(A22, tmp1, M4, halfSize);
+            openmp_parallel_matrix_multiplication_strassen_operation(A22, tmp1, M4, halfSize, useGPU);
         }
         #pragma omp task shared(M5)
         {
             matrix tmp1 = create_matrix(halfSize);
             parallel_matrix_addition(A11, A12, tmp1, halfSize);
-            openmp_parallel_matrix_multiplication_strassen_operation(tmp1, B22, M5, halfSize);
+            openmp_parallel_matrix_multiplication_strassen_operation(tmp1, B22, M5, halfSize, useGPU);
         }
         #pragma omp task shared(M6)
         {
@@ -290,7 +290,7 @@ void openmp_parallel_matrix_multiplication_strassen_operation(const matrix& A, c
             matrix tmp2 = create_matrix(halfSize);
             parallel_matrix_subtraction(A21, A11, tmp1, halfSize);
             parallel_matrix_addition(B11, B12, tmp2, halfSize);
-            openmp_parallel_matrix_multiplication_strassen_operation(tmp1, tmp2, M6, halfSize);
+            openmp_parallel_matrix_multiplication_strassen_operation(tmp1, tmp2, M6, halfSize, useGPU);
         }
         #pragma omp task shared(M7)
         {
@@ -298,7 +298,7 @@ void openmp_parallel_matrix_multiplication_strassen_operation(const matrix& A, c
             matrix tmp2 = create_matrix(halfSize);
             parallel_matrix_subtraction(A12, A22, tmp1, halfSize);
             parallel_matrix_addition(B21, B22, tmp2, halfSize);
-            openmp_parallel_matrix_multiplication_strassen_operation(tmp1, tmp2, M7, halfSize);
+            openmp_parallel_matrix_multiplication_strassen_operation(tmp1, tmp2, M7, halfSize, useGPU);
         }
         #pragma omp taskwait
     } else {
@@ -306,30 +306,30 @@ void openmp_parallel_matrix_multiplication_strassen_operation(const matrix& A, c
         matrix tmp2 = create_matrix(halfSize);
         parallel_matrix_addition(A11, A22, tmp1, halfSize);
         parallel_matrix_addition(B11, B22, tmp2, halfSize);
-        openmp_parallel_matrix_multiplication_strassen_operation(tmp1, tmp2, M1, halfSize);
+        openmp_parallel_matrix_multiplication_strassen_operation(tmp1, tmp2, M1, halfSize, useGPU);
 
         parallel_matrix_addition(A21, A22, tmp1, halfSize);
-        openmp_parallel_matrix_multiplication_strassen_operation(tmp1, B11, M2, halfSize);
+        openmp_parallel_matrix_multiplication_strassen_operation(tmp1, B11, M2, halfSize, useGPU);
 
         parallel_matrix_subtraction(B12, B22, tmp1, halfSize);
-        openmp_parallel_matrix_multiplication_strassen_operation(A11, tmp1, M3, halfSize);
+        openmp_parallel_matrix_multiplication_strassen_operation(A11, tmp1, M3, halfSize, useGPU);
 
         parallel_matrix_subtraction(B21, B11, tmp1, halfSize);
-        openmp_parallel_matrix_multiplication_strassen_operation(A22, tmp1, M4, halfSize);
+        openmp_parallel_matrix_multiplication_strassen_operation(A22, tmp1, M4, halfSize, useGPU);
 
         parallel_matrix_addition(A11, A12, tmp1, halfSize);
-        openmp_parallel_matrix_multiplication_strassen_operation(tmp1, B22, M5, halfSize);
+        openmp_parallel_matrix_multiplication_strassen_operation(tmp1, B22, M5, halfSize, useGPU);
 
         parallel_matrix_subtraction(A21, A11, tmp1, halfSize);
         parallel_matrix_addition(B11, B12, tmp2, halfSize);
-        openmp_parallel_matrix_multiplication_strassen_operation(tmp1, tmp2, M6, halfSize);
+        openmp_parallel_matrix_multiplication_strassen_operation(tmp1, tmp2, M6, halfSize, useGPU);
 
         parallel_matrix_subtraction(A12, A22, tmp1, halfSize);
         parallel_matrix_addition(B21, B22, tmp2, halfSize);
-        openmp_parallel_matrix_multiplication_strassen_operation(tmp1, tmp2, M7, halfSize);
+        openmp_parallel_matrix_multiplication_strassen_operation(tmp1, tmp2, M7, halfSize, useGPU);
     }
                 
-    #pragma omp parallel for collapse(2) schedule(static) num_threads(NUM_THREADS)
+    #pragma omp parallel for collapse(2) schedule(dynamic)
     for (int i = 0; i < halfSize; ++i) {
             for (int j = 0; j < halfSize; ++j) {
                 res[i][j] = M1[i][j] + M4[i][j] - M5[i][j] + M7[i][j];          // C11
@@ -342,14 +342,14 @@ void openmp_parallel_matrix_multiplication_strassen_operation(const matrix& A, c
     
 }
 
-void openmp_parallel_matrix_multiplication_strassen(const matrix& A, const matrix& B, matrix& res, unsigned int n){
+void openmp_parallel_matrix_multiplication_strassen(const matrix& A, const matrix& B, matrix& res, unsigned int n, bool useGPU){
     // omp_set_num_threads(8);
     omp_set_nested(1);
-    #pragma omp parallel num_threads(NUM_TASK)
+    #pragma omp parallel
     {
     #pragma omp single
      {
-        openmp_parallel_matrix_multiplication_strassen_operation(A, B, res, n);
+        openmp_parallel_matrix_multiplication_strassen_operation(A, B, res, n, useGPU);
      }
     }
 }

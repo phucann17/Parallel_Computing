@@ -5,7 +5,7 @@ CXXFLAGS = -std=c++17 -O3 -Wall -Iinclude -fopenmp -foffload=nvptx-none -fcf-pro
 SRC_DIR = source
 SOURCES = $(wildcard $(SRC_DIR)/*.cpp) main.cpp
 
-TARGET = test
+TARGET = main
 OBJECTS = $(SOURCES:.cpp=.o)
 
 all: $(TARGET)
@@ -20,6 +20,6 @@ clean:
 	rm -f $(TARGET) $(OBJECTS) source/*.o
 
 run:
-	./$(TARGET)
+	OMP_NUM_THREADS=8 ./${TARGET}
 
 .PHONY: all clean run
