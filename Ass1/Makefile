@@ -23,6 +23,6 @@ clean:
 	rm -f $(TARGET) $(OBJECTS)
 
 run:
-	OMP_NUM_THREADS=8 ./${TARGET}
+	OMP_NUM_THREADS=4 ./${TARGET}
 
 .PHONY: run clean all

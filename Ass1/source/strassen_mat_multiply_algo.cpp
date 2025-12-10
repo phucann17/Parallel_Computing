@@ -344,7 +344,7 @@ void openmp_parallel_matrix_multiplication_strassen_operation(const matrix& A, c
 
 void openmp_parallel_matrix_multiplication_strassen(const matrix& A, const matrix& B, matrix& res, unsigned int n){
     // omp_set_num_threads(8);
-    omp_set_nested(1);
+    omp_set_nested(0);
     #pragma omp parallel
     {
     #pragma omp single
