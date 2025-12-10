@@ -343,8 +343,8 @@ void openmp_parallel_matrix_multiplication_strassen_operation(const matrix& A, c
 }
 
 void openmp_parallel_matrix_multiplication_strassen(const matrix& A, const matrix& B, matrix& res, unsigned int n, bool useGPU){
-    // omp_set_num_threads(8);
     omp_set_nested(1);
+    // omp_set_max_active_levels(2);
     #pragma omp parallel
     {
     #pragma omp single

@@ -87,7 +87,7 @@ void sequential_transpose_matrix_multiplication_naive(const matrix& A, const mat
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void openMP_transpose_parallel_matrix_multiplication_naive(const matrix& A, const matrix& B, matrix& res, unsigned int n){
     matrix BT = create_matrix(n);
-
+    int tmp = 0;
     #pragma omp parallel
     {
         #pragma omp for collapse(2) schedule(dynamic)
@@ -96,10 +96,11 @@ void openMP_transpose_parallel_matrix_multiplication_naive(const matrix& A, cons
                 BT[j][i] = B[i][j];
             }
                 
-        #pragma omp for collapse(2) schedule(dynamic)
+        #pragma omp for collapse(2) schedule(dynamic) reduction(+:tmp)
         for (unsigned int i = 0; i < n; ++i) {
             for (unsigned int j = 0; j < n; ++j) {
-                int tmp = 0;
+                tmp = 0;
+                // #pragma omp simd reduction(+:tmp)
                 for (unsigned int k = 0; k < n; ++k)
                     tmp += A[i][k] * BT[j][k];
                 res[i][j] = tmp;

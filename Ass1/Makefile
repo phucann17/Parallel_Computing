@@ -20,6 +20,6 @@ clean:
 	rm -f $(TARGET) $(OBJECTS) source/*.o
 
 run:
-	OMP_NUM_THREADS=8 ./${TARGET}
+	OMP_NUM_THREADS=20 ./${TARGET}
 
 .PHONY: all clean run
