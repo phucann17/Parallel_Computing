@@ -1,4 +1,3 @@
-MPI-node5
 MPI-node7
 MPI-node9
 MPI-node15

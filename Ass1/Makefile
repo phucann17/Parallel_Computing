@@ -19,7 +19,7 @@ run: $(TARGET)
 	mpirun -np $(NP) ./$(TARGET)
 
 run_nodes: $(TARGET)
-	mpirun -np $$(($(NP) * 6)) --hostfile mpi-hosts.txt ./$(TARGET)
+	mpirun -np $$(($(NP) * 5)) --hostfile mpi-hosts.txt ./$(TARGET)
 
 clean:
 	rm -f $(TARGET) $(OBJECTS)
