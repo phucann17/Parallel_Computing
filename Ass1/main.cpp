@@ -139,7 +139,7 @@ void print_table(const vector<BenchmarkResult>& R) {
 }
 
 void run_all_benchmarks() {
-    vector<int> sizes = {100, 1000, 3000};
+    vector<int> sizes = {100, 1000, 5000, 10000};
     vector<BenchmarkResult> results;
 
     for (int n : sizes) {
