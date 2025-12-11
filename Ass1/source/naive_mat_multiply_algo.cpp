@@ -114,10 +114,7 @@ void openMP_parallel_matrix_multiplication_naive(const matrix& A, const matrix& 
     }
 }
 
-void mpi_parallel_matrix_multiplication_naive(const matrix& A, const matrix& B, matrix& res, unsigned int n) {
-    int rank, size;
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-    MPI_Comm_size(MPI_COMM_WORLD, &size);
+void mpi_parallel_matrix_multiplication_naive(const matrix& A, const matrix& B, matrix& res, unsigned int n, int size, int rank) {
 
     int rows_per_process = n / size;
     int start_row = rank * rows_per_process;
@@ -138,7 +135,7 @@ void mpi_parallel_matrix_multiplication_naive(const matrix& A, const matrix& B, 
     matrix local_B = create_matrix(n);
     for (unsigned int i = 0; i < n; ++i) {
         for (unsigned int j = 0; j < n; ++j) {
-            local_B[i][j] = Matrix_flat_B[i * n + j];
+            local_B[j][i] = Matrix_flat_B[i * n + j];
         }
     }
 
@@ -149,7 +146,7 @@ void mpi_parallel_matrix_multiplication_naive(const matrix& A, const matrix& B, 
         for (unsigned int j = 0; j < n; ++j) {
             int tmp = 0;
             for (unsigned int k = 0; k < n; ++k) {
-                tmp += A[start_row + i][k] * local_B[k][j];
+                tmp += A[start_row + i][k] * local_B[j][k];
             }
             local_res[i][j] = tmp;
         }

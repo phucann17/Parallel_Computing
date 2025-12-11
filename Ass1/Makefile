@@ -5,7 +5,7 @@ TARGET = main
 SOURCES = $(wildcard $(SRC_DIR)/*.cpp) main.cpp
 OBJECTS = $(SOURCES:.cpp=.o)
 
-NP ?= 2
+NP ?= 4
 
 all: $(TARGET)
 
