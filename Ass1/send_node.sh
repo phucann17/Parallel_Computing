@@ -1,6 +1,6 @@
 #!/bin/bash
 # send_node.sh
-NODES=("MPI-node9" "MPI-node5" "MPI-node15" "MPI-node14" "MPI-node3")
+NODES=("MPI-node9" "MPI-node15" "MPI-node14" "MPI-node3")
 
 SOURCE_DIR=~/CO3067_HK251_Group_03
 
