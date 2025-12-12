@@ -37,7 +37,7 @@ unsigned int next_power_of_two(unsigned int n) {
 }
 
 void sequential_matrix_multiplication_strassen(const matrix& A, const matrix& B, matrix& res, unsigned int n) {
-    if (n <= 16) {
+    if (n <= 64) {
         sequential_transpose_matrix_multiplication_naive(A, B, res, n);
         return;
     }
@@ -56,7 +56,7 @@ void sequential_matrix_multiplication_strassen(const matrix& A, const matrix& B,
         }
         // Perform Strassen's algorithm on padded matrices
         sequential_matrix_multiplication_strassen(padded_A, padded_B, padded_res, padded_n);
-        #pragma omp parallel for collapse(2) schedule(dynamic) num_threads(5)
+
         // Copy result back to original result matrix
         for (unsigned int i = 0; i < n; ++i) {
             for (unsigned int j = 0; j < n; ++j) {
@@ -169,7 +169,8 @@ void sequential_matrix_multiplication_strassen(const matrix& A, const matrix& B,
 
 void mpi_parallel_matrix_multiplication_strassen(const matrix& A, const matrix& B, matrix& res, unsigned int n, int size, int rank) {
     if (n <= (n_global / 1.5)) {
-        openMP_transpose_parallel_matrix_multiplication_naive(A, B, res, n, 5);
+        openMP_transpose_parallel_matrix_multiplication_naive(A, B, res, n, 7);
+        // sequential_transpose_matrix_multiplication_naive(A, B, res, n);
         return;
     }
     int halfSize = n / 2;
@@ -337,7 +338,6 @@ void mpi_parallel_matrix_multiplication_strassen(const matrix& A, const matrix& 
     if (rank != 6 % size) { for(int i=0; i<halfSize; ++i) for(int j=0; j<halfSize; ++j) M7[i][j] = flat_buffer[i*halfSize + j]; }
 
     // assemble final result for all processes
-    #pragma omp parallel for collapse(2) schedule(dynamic) num_threads(5)
     for (int i = 0; i < halfSize; ++i) {
             for (int j = 0; j < halfSize; ++j) {
                 res[i][j] = M1[i][j] + M4[i][j] - M5[i][j] + M7[i][j];          // C11
