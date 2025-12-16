@@ -1,8 +1,10 @@
 #pragma once 
 #include <vector>
+#include <iostream>
 #include <omp.h>
 typedef std::vector<std::vector<int>> matrix;
 extern unsigned int n_global;
+extern bool ok;
 #define NUM_THREADS 20
 #define NUM_TASK 8
 #define NUM_FOR (NUM_THREADS - NUM_TASK)

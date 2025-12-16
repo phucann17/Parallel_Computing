@@ -1,4 +1,3 @@
-#include <iostream>
 #include <omp.h>
 #include "matrix_operations.h"
 #include "naive_mat_multiply_algo.h"
@@ -48,7 +47,6 @@ BenchmarkResult run_simulation(int n) {
     matrix A = create_matrix(n);
     matrix B = create_matrix(n);
     matrix res_naive_seq = create_matrix(n);
-    matrix res_naive_parallel = create_matrix(n);
     matrix res_strassen_seq = create_matrix(n);
 
     // init random
@@ -65,8 +63,7 @@ BenchmarkResult run_simulation(int n) {
     R.seq_naive = end - start;
     print_block("Sequential transpose naive",
                 R.seq_naive,
-                true);   // always valid vs itself
-
+                true);   // always valid vs itself 
     // [2] Sequential Strassen
     start = omp_get_wtime();
     sequential_matrix_multiplication_strassen(A, B, res_strassen_seq, n);
@@ -75,43 +72,68 @@ BenchmarkResult run_simulation(int n) {
     print_block("Sequential Strassen",
                 R.seq_strassen,
                 verify_matrix_multiplication(res_naive_seq, res_strassen_seq, n));
-
+    if (n >= 10000) {
+        matrix().swap(res_strassen_seq);
+        std::this_thread::sleep_for(std::chrono::seconds(3));
+    }
+    res_strassen_seq = create_matrix(n); 
     // [3] OpenMP CPU naive
     start = omp_get_wtime();
-    openMP_transpose_parallel_matrix_multiplication_naive(A, B, res_naive_parallel, n);
+    openMP_transpose_parallel_matrix_multiplication_naive(A, B, res_strassen_seq , n);
     end = omp_get_wtime();
     R.omp_cpu_naive = end - start;
     print_block("OpenMP CPU naive",
                 R.omp_cpu_naive,
-                verify_matrix_multiplication(res_naive_seq, res_naive_parallel, n));
-
+                verify_matrix_multiplication(res_naive_seq, res_strassen_seq , n));           
+    if (n >= 10000) {
+        matrix().swap(res_strassen_seq);  
+        std::this_thread::sleep_for(std::chrono::seconds(3));
+    }
+    res_strassen_seq = create_matrix(n);
     // [4] OpenMP GPU naive
     start = omp_get_wtime();
-    openMP_gpu_matrix_multiply(A, B, res_naive_parallel);
+    openMP_gpu_matrix_multiply(A, B, res_strassen_seq);
     end = omp_get_wtime();
     R.omp_gpu_naive = end - start;
     print_block("OpenMP GPU naive",
                 R.omp_gpu_naive,
-                verify_matrix_multiplication(res_naive_seq, res_naive_parallel, n));
-
+                verify_matrix_multiplication(res_naive_seq, res_strassen_seq, n));
+    if (n >= 10000) {
+        matrix().swap(res_strassen_seq);
+        std::this_thread::sleep_for(std::chrono::seconds(8));
+    }
+    // res_strassen_seq = create_matrix(n);
+    // [6] OpenMP GPU Strassen
+    start = omp_get_wtime();
+    openmp_parallel_matrix_multiplication_strassen(A, B,  res_naive_seq, n, 1);
+    end = omp_get_wtime();
+    R.omp_gpu_strassen = end - start;
+    // print_block("OpenMP GPU Strassen",
+    //             R.omp_gpu_strassen,
+    //             verify_matrix_multiplication(res_naive_seq, res_strassen_seq, n));
+    printf("OpenMP GPU Strassen\n");
+    printf("    Time: %.6f s\n", end - start);
+    printf("    Check valid: %s\n", ok ? "OK" : "Not equal!");
+    printf("------------------------------------------------\n\n");
+    res_strassen_seq = create_matrix(n);
     // [5] OpenMP CPU Strassen
     start = omp_get_wtime();
-    openmp_parallel_matrix_multiplication_strassen(A, B, res_naive_parallel, n, 0);
+    openmp_parallel_matrix_multiplication_strassen(A, B, res_strassen_seq, n, 0);
     end = omp_get_wtime();
     R.omp_cpu_strassen = end - start;
     print_block("OpenMP CPU Strassen",
                 R.omp_cpu_strassen,
-                verify_matrix_multiplication(res_strassen_seq, res_naive_parallel, n));
-
-    // [6] OpenMP GPU Strassen
-    start = omp_get_wtime();
-    openmp_parallel_matrix_multiplication_strassen(A, B, res_naive_parallel, n, 1);
-    end = omp_get_wtime();
-    R.omp_gpu_strassen = end - start;
-    print_block("OpenMP GPU Strassen",
-                R.omp_gpu_strassen,
-                verify_matrix_multiplication(res_strassen_seq, res_naive_parallel, n));
-
+                verify_matrix_multiplication(res_naive_seq, res_strassen_seq, n));
+    if (n >= 10000) {
+    //     printf("res_strassen_seq capacity = %zu\n",
+    //    res_strassen_seq.capacity()); 
+        matrix().swap(res_strassen_seq);
+    //     res_strassen_seq.resize(0);
+    //     printf("res_strassen_seq capacity = %zu\n",
+    //    res_strassen_seq.capacity()); 
+        std::this_thread::sleep_for(std::chrono::seconds(7));
+    }
+    // res_strassen_seq = create_matrix(n);
     printf("Finish simulation %d x %d\n", n, n);
     printf("==============================================\n\n");
 
@@ -146,7 +168,12 @@ void run_all_benchmarks() {
         results.push_back(run_simulation(n));
 
         printf("Sleeping 3 seconds before next simulation...\n");
-        std::this_thread::sleep_for(std::chrono::seconds(3));
+        if (n >= 5000){
+            std::this_thread::sleep_for(std::chrono::seconds(8));
+        }else{
+            std::this_thread::sleep_for(std::chrono::seconds(3));
+        }
+        
     }
 
     print_table(results);

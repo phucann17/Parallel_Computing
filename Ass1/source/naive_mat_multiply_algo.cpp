@@ -122,21 +122,9 @@ void openMP_parallel_matrix_multiplication_naive(const matrix& A, const matrix& 
     }
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-std::vector<int> flatten_matrix(const matrix& M) {
-    unsigned int n = M.size();
-    std::vector<int> flat(n*n);
-    for (unsigned int i = 0; i < n; ++i)
-        for (unsigned int j = 0; j < n; ++j)
-            flat[i*n + j] = M[i][j];
-    return flat;
-}
-
 void openMP_gpu_matrix_multiply(const matrix& A, const matrix& B, matrix& res) {
     unsigned int n = A.size();
-    const int BK = 32;
-
-    // ---- Tạo BT transpose ----
-    matrix BT = transpose(B);
+    const int BK = 128;
 
     // ---- Flatten ----
     int *A_flat = new int[n*n];
@@ -147,11 +135,11 @@ void openMP_gpu_matrix_multiply(const matrix& A, const matrix& B, matrix& res) {
     for (unsigned int i = 0; i < n; ++i)
         for (unsigned int j = 0; j < n; ++j) {
             A_flat[i*n + j] = A[i][j];
-            BT_flat[i*n + j] = BT[i][j];
+            BT_flat[j*n + i] = B[i][j];
             res_flat[i*n + j] = 0;
         }
 
-    // ---- Copy A, BT to device ----
+    // ---- Copy A, BT to GPU ----
     #pragma omp target enter data \
         map(to : A_flat[0:n*n], BT_flat[0:n*n]) \
         map(alloc : res_flat[0:n*n])
@@ -184,8 +172,8 @@ void openMP_gpu_matrix_multiply(const matrix& A, const matrix& B, matrix& res) {
     // ---- Free device memory ----
     #pragma omp target exit data \
         map(release: A_flat[0:n*n], BT_flat[0:n*n], res_flat[0:n*n])
-
-    // ---- Copy flattened result vào res ----
+    
+    // ---- Copy flattened result to res ----
     #pragma omp parallel for collapse(2)
     for (unsigned int i = 0; i < n; ++i)
         for (unsigned int j = 0; j < n; ++j)

@@ -2,6 +2,7 @@
 #include <cstdio>
 #include <cstdlib>
 unsigned int n_global = 0;
+bool ok = true;
 matrix create_matrix(int n) {
     return matrix(n, std::vector<int> (n, 0));
 }

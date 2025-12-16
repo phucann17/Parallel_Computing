@@ -175,11 +175,18 @@ void sequential_matrix_multiplication_strassen(const matrix& A, const matrix& B,
 }
 
 void openmp_parallel_matrix_multiplication_strassen_operation(const matrix& A, const matrix& B, matrix& res, unsigned int n, bool useGPU) {
-    if (n <= ((n_global/4) + 1)) {
-        useGPU == 1 ? openMP_gpu_matrix_multiply(A, B, res)
-                    : openMP_transpose_parallel_matrix_multiplication_naive(A, B, res, n);
-        return;
+    if (useGPU == 1){
+        if (n <= ((n_global/2) + 1)) {
+            openMP_gpu_matrix_multiply(A, B, res);
+            return;
+        }
+    } else {
+        if (n <= ((n_global/4) + 1)) {
+            openMP_transpose_parallel_matrix_multiplication_naive(A, B, res, n);
+            return;
+        }
     }
+
 
     if ((n & 1)) {
         unsigned int padded_n = n + 1;
@@ -329,16 +336,26 @@ void openmp_parallel_matrix_multiplication_strassen_operation(const matrix& A, c
         openmp_parallel_matrix_multiplication_strassen_operation(tmp1, tmp2, M7, halfSize, useGPU);
     }
                 
-    #pragma omp parallel for collapse(2) schedule(dynamic)
-    for (int i = 0; i < halfSize; ++i) {
-            for (int j = 0; j < halfSize; ++j) {
-                res[i][j] = M1[i][j] + M4[i][j] - M5[i][j] + M7[i][j];          // C11
-                res[i][j + halfSize] = M3[i][j] + M5[i][j];                     // C12
-                res[i + halfSize][j] = M2[i][j] + M4[i][j];                     // C21
-                res[i + halfSize][j + halfSize] = M1[i][j] - M2[i][j] + M3[i][j] + M6[i][j]; // C22
+    if (useGPU == 0){
+        #pragma omp parallel for collapse(2) schedule(dynamic)
+        for (int i = 0; i < halfSize; ++i) {
+                for (int j = 0; j < halfSize; ++j) {
+                    res[i][j] = M1[i][j] + M4[i][j] - M5[i][j] + M7[i][j];          // C11
+                    res[i][j + halfSize] = M3[i][j] + M5[i][j];                     // C12
+                    res[i + halfSize][j] = M2[i][j] + M4[i][j];                     // C21
+                    res[i + halfSize][j + halfSize] = M1[i][j] - M2[i][j] + M3[i][j] + M6[i][j]; // C22
+                }
             }
-        }
-    
+    } else {
+        for (int i = 0; i < halfSize; ++i) {
+                for (int j = 0; j < halfSize; ++j) {
+                    if ( res[i][j] != M1[i][j] + M4[i][j] - M5[i][j] + M7[i][j]) ok = false;// C11
+                    if ( res[i][j + halfSize] != M3[i][j] + M5[i][j]) ok = false;// C12 
+                    if ( res[i + halfSize][j] != M2[i][j] + M4[i][j]) ok = false; // C21
+                    if ( res[i + halfSize][j + halfSize] != M1[i][j] - M2[i][j] + M3[i][j] + M6[i][j]) ok = false;// C22                                   
+                }
+            }
+    }
     
 }
 
