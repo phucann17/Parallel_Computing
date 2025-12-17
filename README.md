@@ -34,3 +34,22 @@ For other operating systems, figure it out yourself. Google exists for a reason.
 *   **[Dinh Xuan Quyet]** - MPI Specialist (Distributed Memory Parallelization & Scalability Study)
 
 ```
+
+## 3. Project Structure & Usage
+The repository is organized by computational paradigms. Below is the file structure:
+
+code
+Text
+PARALLEL_COMPUTING
+├── Parallel_Computing-hybrid       # Hybrid Model (MPI + OpenMP)
+├── Parallel_Computing-mpi_new      # Distributed Memory implementation (MPI)
+├── Parallel_Computing-openMP       # Shared Memory implementation (OpenMP)
+├── Parallel_Computing-openMP_GPU   # OpenMP with GPU offloading
+├── draw.ipynb                      # Performance visualization template
+└── README.md                       # Main documentation
+
+How to Run
+
+Specific Implementations: To test or benchmark a specific parallel version, simply navigate to the corresponding directory (e.g., cd Parallel_Computing-openMP) and follow the instructions provided in the local README.md file inside that folder.
+
+Visualization: The draw.ipynb file is a Jupyter Notebook template. You can use it to generate comparison charts and plots to visualize the performance differences between the algorithms.
