@@ -33,7 +33,7 @@ For other operating systems, figure it out yourself. Google exists for a reason.
 *   **[Nguyen Phuc An]** - OpenMP Specialist (Shared Memory Parallelization & Performance Analysis)
 *   **[Dinh Xuan Quyet]** - MPI Specialist (Distributed Memory Parallelization & Scalability Study)
 
-```
+---
 
 ## 3. Project Structure & Usage
 The repository is organized by computational paradigms. Below is the file structure:
